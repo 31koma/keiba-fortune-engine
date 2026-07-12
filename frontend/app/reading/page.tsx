@@ -78,6 +78,21 @@ function ReadingBody() {
         </h1>
       </section>
 
+      <section className={`sync-box sync-${r.sync.tier}`}>
+        <div className="sync-label">今日のシンクロ度</div>
+        <div className="sync-stars" aria-hidden="true">
+          {"★".repeat(r.sync.stars)}{"☆".repeat(10 - r.sync.stars)}
+        </div>
+        <div className="sync-score">
+          {r.sync.score.toFixed(1)}<span className="sync-max"> / 10</span>
+        </div>
+        <div className="sync-word">{r.sync.label}</div>
+        <p className="sync-note">
+          4者(馬・騎手・レース日・あなた)の占術的な調和度です。
+          レース結果や勝率ではありません。※開発用の暫定値(Mock)
+        </p>
+      </section>
+
       <section className="you-sec today" style={{ marginTop: 24 }}>
         <div className="theme-label">今回の結論</div>
         <p className="conclusion">「{r.conclusion.title}」</p>

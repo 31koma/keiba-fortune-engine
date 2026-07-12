@@ -36,8 +36,16 @@ export type QuadPerson = {
   pd: number | null; theme: { word: string; line: string }; role: string;
 };
 
+export type SyncScore = {
+  score: number;        // 0.0〜10.0(開発用の暫定Mock値。正式な統合スコアは正本未定義)
+  stars: number;        // 0〜10
+  label: string;
+  tier: "gold" | "green" | "blue" | "orange" | "red";
+};
+
 export type QuadReading = {
   race: MockRace; entry: MockEntry;
+  sync: SyncScore;
   horse: QuadPerson; jockey: QuadPerson; race_day: QuadPerson; user: QuadPerson;
   conclusion: { title: string; body: string };
   common_theme: { word: string; line: string };
@@ -93,8 +101,21 @@ export function buildQuadReading(
       ? "展開との相性を確認したい組み合わせ"
       : "慎重に評価したい組み合わせ";
 
+  // ---- 今日のシンクロ度(開発用の暫定Mock。4者の調和度であり勝率・結果予測ではない) ----
+  const fine = ((horse.pd! * 7 + jockey.pd! * 5 + user.pd! * 3 + ud) % 15) / 10; // 0.0〜1.4
+  const syncScore = Math.min(10,
+    overlap >= 3 ? 8.4 + fine : overlap === 2 ? 6.4 + fine : 4.4 + fine);
+  const score = Math.round(syncScore * 10) / 10;
+  const tier = score >= 9 ? "gold" : score >= 8 ? "green" : score >= 6 ? "blue"
+    : score >= 4 ? "orange" : "red";
+  const syncLabel = score >= 9 ? "かなり流れが噛み合う日"
+    : score >= 8 ? "流れが噛み合いやすい日"
+      : score >= 6 ? "噛み合わせ次第の日"
+        : score >= 4 ? "リズムの違いを楽しむ日" : "別々の流れの日";
+
   return {
     race, entry, horse, jockey, race_day, user,
+    sync: { score, stars: Math.round(score), label: syncLabel, tier },
     conclusion: {
       title: overlap >= 3
         ? "同じ方向を向きやすい組み合わせ"

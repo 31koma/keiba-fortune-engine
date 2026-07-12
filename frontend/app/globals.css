@@ -328,6 +328,30 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding-top: 18px;
   border-bottom: 1px solid var(--line); padding-bottom: 2px;
   font-family: "Hiragino Sans", sans-serif; }
 
+/* ---- 今日のシンクロ度 ---- */
+.sync-box { margin-top: 24px; text-align: center; border-radius: 20px;
+  padding: 28px 20px 22px; border: 1px solid var(--line);
+  background: rgba(27, 36, 64, 0.55); animation: reveal .5s ease; }
+.sync-label { font-size: 11px; letter-spacing: 0.3em; color: var(--ink-dim);
+  font-family: "Hiragino Sans", sans-serif; }
+.sync-stars { margin-top: 14px; font-size: 20px; letter-spacing: 0.14em; }
+.sync-score { margin-top: 10px; font-family: Georgia, "Times New Roman", serif;
+  font-size: 46px; line-height: 1.1; letter-spacing: 0.02em; }
+.sync-max { font-size: 18px; color: var(--ink-dim); }
+.sync-word { margin-top: 10px; font-size: 16px; letter-spacing: 0.08em; }
+.sync-note { margin-top: 14px; font-size: 10.5px; color: var(--ink-dim);
+  line-height: 1.8; font-family: "Hiragino Sans", sans-serif; }
+.sync-gold   { border-color: rgba(201,164,92,.55); background: rgba(201,164,92,.08); }
+.sync-gold   .sync-stars, .sync-gold .sync-score, .sync-gold .sync-word { color: #d8b876; }
+.sync-green  { border-color: rgba(94,158,110,.5); background: rgba(94,158,110,.07); }
+.sync-green  .sync-stars, .sync-green .sync-score, .sync-green .sync-word { color: #8fc9a0; }
+.sync-blue   { border-color: rgba(110,150,200,.5); background: rgba(110,150,200,.07); }
+.sync-blue   .sync-stars, .sync-blue .sync-score, .sync-blue .sync-word { color: #9cc0e8; }
+.sync-orange { border-color: rgba(210,150,90,.5); background: rgba(210,150,90,.07); }
+.sync-orange .sync-stars, .sync-orange .sync-score, .sync-orange .sync-word { color: #e0b083; }
+.sync-red    { border-color: rgba(200,100,100,.5); background: rgba(200,100,100,.07); }
+.sync-red    .sync-stars, .sync-red .sync-score, .sync-red .sync-word { color: #dd9a9a; }
+
 /* ---- 4者分析 ---- */
 .reading-head { margin-top: 18px; }
 .reading-title { margin-top: 8px; font-size: 21px; letter-spacing: 0.06em; font-weight: 600; }

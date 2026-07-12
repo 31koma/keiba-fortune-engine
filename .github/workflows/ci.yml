@@ -15,10 +15,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      KEIBA_KB_DIR: ${{ runner.temp }}/kb
-      KEIBA_MANIFEST_MD: ${{ runner.temp }}/kb/kb_manifest.md
-      KEIBA_DATABASE_URL: sqlite:///${{ runner.temp }}/ci.db
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +24,14 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
+
+      - name: 環境変数の設定(RUNNER_TEMPはステップ内でのみ参照可)
+        run: |
+          {
+            echo "KEIBA_KB_DIR=$RUNNER_TEMP/kb"
+            echo "KEIBA_MANIFEST_MD=$RUNNER_TEMP/kb/kb_manifest.md"
+            echo "KEIBA_DATABASE_URL=sqlite:///$RUNNER_TEMP/ci.db"
+          } >> "$GITHUB_ENV"
 
       - name: 依存関係のインストール
         run: pip install -r backend/requirements.txt

@@ -30,7 +30,7 @@ export default function BirthdateModal({
       <div className="modal-bg" onClick={() => { onSaved(saved); }}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
           <div className="reveal">
-            <div className="label">あなたの基本プロフィール</div>
+            <div className="label">あなたの基本設計図</div>
             <div className="profile-row">
               <div><span className="pv">{lp}</span><span className="pk">ライフパス</span></div>
               <div><span className="pv">{sign.ja}</span><span className="pk">太陽星座{sign.boundary ? "(境界日)" : ""}</span></div>

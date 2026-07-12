@@ -19,6 +19,8 @@ export type MockRace = {
   name: string;
   distance: string;
   entries: MockEntry[];
+  /** ⭐今日の注目(開発版Mock。正式実装では知識ベースの規則で決定する) */
+  featuredHorseId: string;
 };
 
 export const MOCK_RACES: MockRace[] = [
@@ -29,6 +31,7 @@ export const MOCK_RACES: MockRace[] = [
     number: 11,
     name: "モック記念(G1)",
     distance: "芝2000m",
+    featuredHorseId: "H001",
     entries: [
       {
         horseId: "H001", horseName: "モックスター", horseBirth: "2022-04-08",

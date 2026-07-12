@@ -142,5 +142,104 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding-top: 18px;
   font-family: "Hiragino Sans", sans-serif; }
 .reveal .cta { margin-top: 20px; }
 .you-chip { color: var(--gold); }
-.horoscope { display: block; font-size: 12px; color: var(--gold);
-  font-family: "Hiragino Sans", sans-serif; margin-top: 2px; }
+.you-link { color: var(--gold); text-decoration: none;
+  border-bottom: 1px solid var(--gold-soft); padding-bottom: 2px; }
+
+/* ---- レース一覧: 占術体験の入口 ---- */
+.races-lead { padding-top: 18px; }
+.races-q { font-size: 22px; letter-spacing: 0.06em; line-height: 1.75; }
+.races-sub { margin-top: 12px; font-size: 13px; color: var(--ink-dim); }
+.race-head { margin-top: 34px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--line); }
+.race-title { display: block; font-size: 17px; letter-spacing: 0.08em; }
+.race-meta { display: block; margin-top: 4px; font-size: 11.5px;
+  color: var(--ink-dim); font-family: "Hiragino Sans", sans-serif;
+  letter-spacing: 0.04em; }
+
+.horse-card { border: 1px solid var(--line); border-radius: 18px;
+  padding: 26px 24px 22px; margin-top: 20px;
+  background: linear-gradient(180deg, rgba(27,36,64,.55), rgba(19,26,48,.55));
+  animation: cardIn .55s ease both;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+@media (hover: hover) {
+  .horse-card:hover { transform: translateY(-2px);
+    border-color: var(--gold-soft); box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+}
+.horse-card.featured { border-color: var(--gold-soft); }
+.featured-tag { font-size: 11px; letter-spacing: 0.24em; color: var(--gold);
+  font-family: "Hiragino Sans", sans-serif; margin-bottom: 18px; }
+.featured-tag span { display: block; letter-spacing: 0.02em; font-size: 10.5px;
+  color: var(--ink-dim); margin-top: 4px; }
+
+.horse-name { font-size: 20px; letter-spacing: 0.1em; }
+.horse-sub { margin-top: 5px; font-size: 11.5px; color: var(--ink-dim);
+  font-family: "Hiragino Sans", sans-serif; letter-spacing: 0.06em; }
+
+.theme-hero { text-align: center; margin-top: 26px; }
+.theme-label { font-size: 10px; letter-spacing: 0.34em; color: var(--ink-dim);
+  font-family: "Hiragino Sans", sans-serif; }
+.theme-label::before, .theme-label::after { content: "—"; color: var(--gold-soft);
+  margin: 0 10px; }
+.theme-word { margin-top: 10px; font-size: 38px; letter-spacing: 0.22em;
+  text-indent: 0.22em; color: var(--gold); font-weight: 600; }
+.theme-line { margin: 14px auto 0; font-size: 13.5px; color: var(--ink-dim);
+  line-height: 2; max-width: 30em; text-align: center; }
+
+.ministats { display: flex; margin-top: 26px; padding-top: 20px;
+  border-top: 1px solid var(--line); }
+.stat { flex: 1; text-align: center; }
+.stat + .stat { border-left: 1px solid var(--line); }
+.stat-num { font-family: Georgia, "Times New Roman", serif; font-size: 30px;
+  line-height: 1.2; color: var(--ink); letter-spacing: 0.06em; }
+.stat-sign { font-family: inherit; font-size: 21px; padding-top: 6px; }
+.stat-key { margin-top: 6px; font-size: 10px; letter-spacing: 0.26em;
+  color: var(--ink-dim); font-family: "Hiragino Sans", sans-serif; }
+.boundary-q { margin-left: 8px; border: 1px solid var(--gold-soft);
+  background: transparent; color: var(--gold); border-radius: 999px;
+  font-size: 9.5px; padding: 2px 8px; letter-spacing: 0.1em; cursor: pointer; }
+.boundary-note { margin-top: 14px; font-size: 12.5px; color: var(--ink-dim);
+  border-left: 2px solid var(--gold-soft); padding-left: 12px; line-height: 1.9;
+  font-family: "Hiragino Sans", sans-serif; animation: reveal .3s ease; }
+
+.quad-btn { display: block; width: 100%; margin-top: 26px; padding: 15px;
+  background: transparent; border: 1px solid var(--gold-soft); border-radius: 13px;
+  color: var(--gold); font-size: 14.5px; letter-spacing: 0.1em;
+  font-family: "Hiragino Sans", sans-serif; cursor: pointer;
+  transition: background .2s ease, transform .15s ease; }
+@media (hover: hover) { .quad-btn:hover { background: rgba(201,164,92,.1); } }
+.quad-btn:active { transform: scale(0.985); background: rgba(201,164,92,.14); }
+.quad-cap { margin-top: 9px; text-align: center; font-size: 10px;
+  letter-spacing: 0.22em; color: var(--ink-dim);
+  font-family: "Hiragino Sans", sans-serif; }
+
+/* ---- あなたを見る ---- */
+.you-invite { text-align: center; padding-top: 40px; }
+.you-invite .races-sub { max-width: 30em; margin: 14px auto 0; }
+.you-invite .cta { max-width: 340px; margin: 30px auto 0; }
+.you-hero { text-align: center; padding-top: 26px; animation: reveal .5s ease; }
+.you-hero .profile-row { margin-top: 22px; }
+.you-motto { margin-top: 24px; font-size: 21px; letter-spacing: 0.1em;
+  color: var(--gold); line-height: 1.7; }
+.you-line { margin-top: 10px; font-size: 13px; color: var(--ink-dim); }
+.you-sec { margin-top: 42px; animation: cardIn .55s ease both; }
+.you-sec h2 { font-size: 14px; letter-spacing: 0.3em; color: var(--gold);
+  text-align: center; font-weight: 600; }
+.you-sec h2::after { content: ""; display: block; width: 30px; height: 1px;
+  background: var(--gold-soft); margin: 12px auto 0; }
+.you-sec > p { margin: 18px auto 0; font-size: 14.5px; line-height: 2.1;
+  max-width: 32em; text-align: center; }
+.tend { margin-top: 20px; }
+.tend > div { display: flex; gap: 16px; padding: 13px 4px;
+  border-bottom: 1px solid var(--line); align-items: baseline; }
+.tend > div:first-child { border-top: 1px solid var(--line); }
+.tend dt { min-width: 6.5em; font-size: 11px; letter-spacing: 0.18em;
+  color: var(--ink-dim); font-family: "Hiragino Sans", sans-serif; }
+.tend dd { font-size: 13.5px; line-height: 1.9; }
+.you-sec.today { text-align: center; border: 1px solid var(--gold-soft);
+  border-radius: 18px; padding: 26px 22px;
+  background: rgba(201, 164, 92, 0.05); }
+.you-sec.today .theme-word { margin-top: 12px; }
+.you-next { margin-top: 44px; text-align: center; }
+.you-next p { font-size: 16px; line-height: 2; letter-spacing: 0.04em; }
+.you-next .cta { margin-top: 20px; }

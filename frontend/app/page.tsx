@@ -42,6 +42,11 @@ export default function Home() {
         <p className="cta-note">登録すると「あなた」の軌道が加わり、4者分析になります</p>
       )}
 
+      <div className="home-links">
+        <Link href="/you">あなたを見る</Link>
+        <Link href="/compat">相性をみる</Link>
+      </div>
+
       <section className="section">
         <h2>このアプリができること</h2>
         <p>

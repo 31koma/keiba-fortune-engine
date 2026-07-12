@@ -1,0 +1,37 @@
+# 秘密情報(絶対にコミットしない)
+.env
+*.env
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ランタイム生成物
+data/
+*.db
+*.sqlite*
+logs/
+
+# OS/エディタ
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node(将来のフロントエンド用)
+node_modules/
+dist/
+.next/
+
+# 配布用アーカイブ
+*.tar.gz
+setup_backend.sh

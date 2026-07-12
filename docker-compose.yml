@@ -1,0 +1,37 @@
+# 競走馬占術エンジン — 開発用構成(Linux/Docker/PostgreSQL)
+# 知識ベース(唯一の正本)と正本参照.mdは読み取り専用マウント。
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: keiba
+      POSTGRES_PASSWORD: keiba_dev_only   # 本番はsecretsで注入。コードに埋め込まない
+      POSTGRES_DB: keiba
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keiba"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KEIBA_DATABASE_URL: postgresql+psycopg://keiba:keiba_dev_only@db:5432/keiba
+      KEIBA_KB_DIR: /kb
+      KEIBA_MANIFEST_MD: /srv/正本参照.md
+      KEIBA_STRICT: "0"          # 1にすると正本不一致で起動失敗
+      KEIBA_DATA_PROVIDER: mock
+      KEIBA_FORBIDDEN_FILTER_MODE: reject
+    volumes:
+      - ../黄道十二宮、西洋占星術、数秘術/db:/kb:ro
+      - ./正本参照.md:/srv/正本参照.md:ro
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:

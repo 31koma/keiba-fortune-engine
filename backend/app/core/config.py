@@ -1,0 +1,40 @@
+"""アプリ設定。占術の知識・意味・ルールは一切保持しない(正本=知識ベースdb/)。"""
+from pathlib import Path
+from typing import Literal
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+APP_ROOT = Path(__file__).resolve().parents[2]  # backend/
+PROJECT_ROOT = APP_ROOT.parent                   # 競馬アプリ/
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="KEIBA_", env_file=".env", extra="ignore")
+
+    # --- 知識ベース(唯一の正本) ---
+    kb_dir: Path = PROJECT_ROOT.parent / "黄道十二宮、西洋占星術、数秘術" / "db"
+    manifest_md: Path = PROJECT_ROOT / "正本参照.md"  # MANIFEST_正本v1.2の写し(ハッシュ表)
+    strict_startup: bool = False  # True: 検証不一致で起動失敗 / False: degraded状態で起動
+
+    # --- DB ---
+    database_url: str = "sqlite:///./data/app.db"  # 本番はdocker-composeでPostgreSQLを注入
+    apply_schema_on_startup: bool = True
+
+    # --- DataProvider ---
+    data_provider: str = "mock"
+    data_provider_name: str = "Mock Data Provider"
+    data_provider_credit: str = "データ提供: モック(開発用固定データ)"
+    data_provider_license_status: str = "development_only"
+
+    # --- 禁止語フィルタ(語彙は正本から。ここはモードのみ) ---
+    forbidden_filter_mode: Literal["reject", "redact", "regenerate"] = "reject"
+
+    # --- 流派オプション(正本でstatus=school_specificの項目のみ切替可) ---
+    master_33_enabled: bool = True          # 正本注記「33を認めない流派あり。設定でOFF可」
+    keep_masters_in_cycles: bool = True     # 正本既定「保持(Decoz準拠)。設定で1桁還元に切替可」
+
+    # --- AI補助(実接続はまだ行わない) ---
+    ai_enabled: bool = False
+
+
+settings = Settings()

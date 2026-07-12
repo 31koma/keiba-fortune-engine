@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Orbit from "./components/Orbit";
 import BirthdateModal from "./components/BirthdateModal";
+import { lifePath, sunSign } from "@/lib/preview";
 
 export default function Home() {
   const [modal, setModal] = useState(false);
@@ -29,9 +30,15 @@ export default function Home() {
 
       <Link href="/races" className="cta">今日のレースを見る</Link>
       <button className={`cta-sub ${birth ? "registered" : ""}`} onClick={() => setModal(true)}>
-        {birth ? `あなたの生年月日: ${birth}(変更する)` : "自分の生年月日を登録する"}
+        {birth ? "あなたのプロフィール(変更する)" : "自分の生年月日を登録する"}
       </button>
-      {!birth && <p className="cta-note">登録すると「あなた」の軌道が加わり、4者分析になります</p>}
+      {birth ? (
+        <p className="cta-note you-chip">
+          あなた: ライフパス {lifePath(birth)}・{sunSign(birth).ja} — 4者分析の準備完了
+        </p>
+      ) : (
+        <p className="cta-note">登録すると「あなた」の軌道が加わり、4者分析になります</p>
+      )}
 
       <section className="section">
         <h2>このアプリができること</h2>

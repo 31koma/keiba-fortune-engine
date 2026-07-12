@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { MOCK_RACES } from "@/lib/mock";
+import { lifePath, sunSign } from "@/lib/preview";
 
 export default function Races() {
   return (
@@ -23,8 +24,11 @@ export default function Races() {
               <span className="names">
                 <span className="horse">{e.horseName}</span>
                 <br />
-                <span className="jockey">
-                  {e.jockeyName} / 馬の生まれ日 {e.horseBirth}
+                <span className="jockey">{e.jockeyName}</span>
+                <span className="horoscope">
+                  数{lifePath(e.horseBirth)}・{sunSign(e.horseBirth).ja}
+                  {sunSign(e.horseBirth).boundary ? "(境界日)" : ""}
+                  ・生まれ日 {e.horseBirth}
                 </span>
               </span>
               <button

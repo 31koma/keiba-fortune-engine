@@ -13,20 +13,73 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  background:
-    radial-gradient(1px 1px at 12% 22%, rgba(245,241,232,.7) 50%, transparent 51%),
-    radial-gradient(1px 1px at 78% 12%, rgba(245,241,232,.5) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 62% 38%, rgba(201,164,92,.6) 50%, transparent 51%),
-    radial-gradient(1px 1px at 32% 64%, rgba(245,241,232,.45) 50%, transparent 51%),
-    radial-gradient(1px 1px at 88% 58%, rgba(245,241,232,.5) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 45% 86%, rgba(245,241,232,.35) 50%, transparent 51%),
-    linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 58%, #16251f 130%);
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 58%, #16251f 130%);
   background-attachment: fixed;
   color: var(--ink);
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   line-height: 1.75;
   min-height: 100dvh;
+  position: relative;
 }
+/* 満天の星空(2層: 微光の星屑 + 瞬く星) */
+body::before, body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+}
+body::before {
+  background-image:
+    radial-gradient(1px 1px at 3% 8%, rgba(245,241,232,.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 11% 31%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 7% 55%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 14% 74%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 5% 91%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 15%, rgba(245,241,232,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 27% 44%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 19% 62%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 25% 83%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 33% 7%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 38% 27%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 31% 52%, rgba(245,241,232,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 40% 71%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 36% 93%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 47% 12%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 52% 38%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 44% 59%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 79%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 61% 6%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 66% 29%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 59% 48%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 69% 67%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 88%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 76% 14%, rgba(245,241,232,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 82% 36%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 74% 57%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 84% 76%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 79% 94%, rgba(245,241,232,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 91% 9%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 95% 33%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 89% 51%, rgba(245,241,232,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 97% 69%, rgba(245,241,232,.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 87%, rgba(245,241,232,.35) 50%, transparent 51%);
+}
+body::after {
+  background-image:
+    radial-gradient(1.6px 1.6px at 16% 21%, rgba(245,241,232,.8) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 68% 11%, rgba(245,241,232,.7) 50%, transparent 51%),
+    radial-gradient(1.8px 1.8px at 84% 43%, rgba(201,164,92,.75) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 29% 68%, rgba(245,241,232,.65) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 49% 24%, rgba(245,241,232,.7) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 9% 47%, rgba(201,164,92,.6) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 58% 62%, rgba(245,241,232,.7) 50%, transparent 51%),
+    radial-gradient(1.7px 1.7px at 90% 22%, rgba(245,241,232,.75) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 21% 90%, rgba(245,241,232,.6) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 72% 82%, rgba(201,164,92,.6) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 42% 44%, rgba(245,241,232,.65) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 96% 58%, rgba(245,241,232,.7) 50%, transparent 51%);
+  animation: twinkle 5s ease-in-out infinite;
+}
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { body::after { animation: none; } }
+main, .dev-badge { position: relative; z-index: 1; }
 main { max-width: 480px; margin: 0 auto; padding: 0 20px calc(32px + env(safe-area-inset-bottom)); }
 
 .dev-badge {

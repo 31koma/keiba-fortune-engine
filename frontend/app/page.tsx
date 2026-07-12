@@ -34,9 +34,7 @@ export default function Home() {
       </button>
       {birth ? (
         <p className="cta-note you-chip">
-          <Link href="/you" className="you-link">
-            あなた: ライフパス {lifePath(birth)}・{sunSign(birth).ja} — あなたを見る →
-          </Link>
+          あなた: ライフパス {lifePath(birth)}・{sunSign(birth).ja} — 4者分析の準備完了
         </p>
       ) : (
         <p className="cta-note">登録すると「あなた」の軌道が加わり、4者分析になります</p>

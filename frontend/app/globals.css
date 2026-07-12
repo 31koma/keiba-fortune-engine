@@ -1,0 +1,121 @@
+/* ブランドガイド準拠: ミッドナイトネイビー基調 / スターホワイト文字 /
+   ターフグリーン接地 / ゴールドは「発見の光」として希少使用 */
+:root {
+  --navy: #131a30;
+  --navy-2: #1b2440;
+  --ink: #f5f1e8;
+  --ink-dim: rgba(245, 241, 232, 0.68);
+  --gold: #c9a45c;
+  --gold-soft: rgba(201, 164, 92, 0.35);
+  --turf: #2e5e4e;
+  --line: rgba(245, 241, 232, 0.14);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background:
+    radial-gradient(1px 1px at 12% 22%, rgba(245,241,232,.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 12%, rgba(245,241,232,.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 38%, rgba(201,164,92,.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 32% 64%, rgba(245,241,232,.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 58%, rgba(245,241,232,.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 86%, rgba(245,241,232,.35) 50%, transparent 51%),
+    linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 58%, #16251f 130%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  line-height: 1.75;
+  min-height: 100dvh;
+}
+main { max-width: 480px; margin: 0 auto; padding: 0 20px calc(32px + env(safe-area-inset-bottom)); }
+
+.dev-badge {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(19, 26, 48, 0.92); backdrop-filter: blur(4px);
+  border-bottom: 1px solid var(--line);
+  font-family: -apple-system, "Hiragino Sans", sans-serif;
+  font-size: 11px; color: var(--ink-dim); text-align: center;
+  padding: 6px 12px calc(6px);
+}
+.dev-badge b { color: var(--gold); font-weight: 600; }
+
+.hero { text-align: center; padding-top: 34px; }
+.brand-en { font-family: Georgia, serif; letter-spacing: 0.42em; font-size: 11px; color: var(--gold); text-transform: uppercase; }
+.brand { font-size: 30px; letter-spacing: 0.12em; margin-top: 6px; font-weight: 600; }
+.brand small { font-size: 12px; color: var(--ink-dim); letter-spacing: 0.08em; }
+.catch { margin-top: 18px; font-size: 21px; letter-spacing: 0.06em; line-height: 1.6; }
+.catch em { font-style: normal; color: var(--gold); }
+.lede { margin-top: 12px; font-size: 14px; color: var(--ink-dim); }
+
+.orbit-wrap { margin: 26px auto 6px; width: min(320px, 86vw); }
+.orbit-caption { text-align: center; font-size: 12.5px; color: var(--ink-dim); margin-top: 2px; }
+
+.cta { display: block; width: 100%; margin-top: 26px; padding: 16px;
+  background: linear-gradient(135deg, #d8b876, var(--gold));
+  color: #1b2440; font-weight: 700; font-size: 17px; letter-spacing: 0.08em;
+  border: none; border-radius: 14px; text-align: center; text-decoration: none;
+  box-shadow: 0 4px 22px var(--gold-soft);
+  font-family: "Hiragino Sans", sans-serif;
+  transition: transform .15s ease;
+}
+.cta:active { transform: scale(0.98); }
+.cta-sub { display: block; width: 100%; margin-top: 12px; padding: 14px;
+  background: transparent; color: var(--ink); font-size: 15px; letter-spacing: 0.06em;
+  border: 1px solid var(--line); border-radius: 14px; text-align: center;
+  font-family: "Hiragino Sans", sans-serif; cursor: pointer;
+}
+.cta-note { text-align: center; font-size: 12px; color: var(--ink-dim); margin-top: 10px; }
+.registered { border-color: var(--gold-soft); color: var(--gold); }
+
+.section { margin-top: 38px; }
+.section h2 { font-size: 15px; letter-spacing: 0.22em; color: var(--gold);
+  text-align: center; font-weight: 600; }
+.section h2::after { content: ""; display: block; width: 34px; height: 1px;
+  background: var(--gold-soft); margin: 10px auto 0; }
+.section p { margin-top: 14px; font-size: 14.5px; }
+
+.terms { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+.term { border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px;
+  font-size: 12.5px; color: var(--ink-dim);
+  font-family: "Hiragino Sans", sans-serif; }
+.term b { color: var(--ink); font-weight: 600; }
+
+.answer-box { margin-top: 16px; border: 1px solid var(--gold-soft); border-radius: 14px;
+  padding: 16px 18px; background: rgba(201, 164, 92, 0.06); }
+.answer-box .label { font-size: 11px; letter-spacing: 0.24em; color: var(--gold);
+  font-family: "Hiragino Sans", sans-serif; }
+.answer-box p { margin-top: 8px; font-size: 14px; }
+
+footer { margin-top: 44px; border-top: 1px solid var(--line); padding-top: 18px;
+  font-size: 11.5px; color: var(--ink-dim); text-align: center;
+  font-family: "Hiragino Sans", sans-serif; line-height: 1.9; }
+
+/* ---- 仮レース一覧 ---- */
+.back { display: inline-block; margin: 18px 0 4px; color: var(--ink-dim);
+  font-size: 13px; text-decoration: none; font-family: "Hiragino Sans", sans-serif; }
+.race-card { border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+  margin-top: 16px; background: rgba(27, 36, 64, 0.55); }
+.race-meta { font-size: 12px; color: var(--ink-dim); font-family: "Hiragino Sans", sans-serif; }
+.race-name { font-size: 19px; margin-top: 4px; letter-spacing: 0.04em; }
+.entry { display: flex; align-items: baseline; gap: 10px; border-top: 1px solid var(--line);
+  margin-top: 12px; padding-top: 12px; }
+.entry .post { color: var(--gold); font-family: Georgia, serif; font-size: 18px; min-width: 20px; }
+.entry .names { flex: 1; }
+.entry .horse { font-size: 16px; }
+.entry .jockey { font-size: 12px; color: var(--ink-dim); }
+.entry button { border: 1px solid var(--gold-soft); background: transparent; color: var(--gold);
+  border-radius: 10px; padding: 8px 12px; font-size: 12px; font-family: "Hiragino Sans", sans-serif; }
+
+/* ---- モーダル ---- */
+.modal-bg { position: fixed; inset: 0; background: rgba(9, 12, 24, 0.78);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.modal { width: 100%; max-width: 480px; background: var(--navy-2);
+  border-radius: 20px 20px 0 0; border: 1px solid var(--line); border-bottom: none;
+  padding: 24px 22px calc(28px + env(safe-area-inset-bottom)); }
+.modal h3 { font-size: 17px; letter-spacing: 0.08em; }
+.modal p { font-size: 13px; color: var(--ink-dim); margin-top: 8px; }
+.modal input[type="date"] { width: 100%; margin-top: 16px; padding: 14px;
+  background: var(--navy); border: 1px solid var(--line); border-radius: 12px;
+  color: var(--ink); font-size: 16px; }
+.modal .row { display: flex; gap: 10px; margin-top: 18px; }
+.modal .row > * { flex: 1; }

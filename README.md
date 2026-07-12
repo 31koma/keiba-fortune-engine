@@ -129,7 +129,8 @@
 | エフェメリス(イングレス表) | 🚧 未着手 | ephemeris_policy準拠でPhase 3 |
 | Frontend(Next.js/PWA) | 🚧 未着手 | Phase 4 |
 | AI API接続 | 🚧 未着手 | Phase 5(文章補助のみ) |
-| readings永続化/Alembic/CI | 🚧 未着手 | Phase 2 |
+| CI(GitHub Actions) | ✅ 完成 | push/PRでMock知識ベース生成→整合・pytest・禁止語・OpenAPIを自動検査 |
+| readings永続化/Alembic | 🚧 未着手 | Phase 2 |
 
 ## 起動方法
 

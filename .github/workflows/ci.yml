@@ -1,0 +1,55 @@
+# CI: mainへのpushとPull Requestで自動実行。
+# 全ステップ成功が必須(ブランチ保護のrequired status checkに設定すると失敗時マージ不可)。
+#
+# 知識ベースの扱い(憲章第2条準拠):
+#   正本(Google Drive)はリポジトリに含めず、CIでは backend/tests/mock_kb.py が
+#   実行時生成する Mock知識ベース(構造は正本と同一・内容はテスト用文言)を使用する。
+#   本番正本(Drive)との照合・同期は、別途安全な同期方式として設計する(将来課題)。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      KEIBA_KB_DIR: ${{ runner.temp }}/kb
+      KEIBA_MANIFEST_MD: ${{ runner.temp }}/kb/kb_manifest.md
+      KEIBA_DATABASE_URL: sqlite:///${{ runner.temp }}/ci.db
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python環境のセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: 依存関係のインストール
+        run: pip install -r backend/requirements.txt
+
+      - name: Mock知識ベースの生成(正本はリポジトリに含めない)
+        run: python backend/tests/mock_kb.py "$KEIBA_KB_DIR"
+
+      - name: Mock知識ベースの整合検査(ローダーと同一ロジック)
+        run: python backend/scripts/check_kb.py
+
+      - name: pytest(知識ローダー・改ざん検知・エンジン・API通し)
+        working-directory: backend
+        run: python -m pytest tests/ -v
+
+      - name: 禁止語フィルタ検査(鑑定文を実生成してゼロ確認)
+        run: python backend/scripts/check_forbidden.py
+
+      - name: OpenAPI生成確認(3.1系・必須4パス)
+        run: python backend/scripts/check_openapi.py
+
+      - name: OpenAPI仕様書をアーティファクトとして保存
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi.json

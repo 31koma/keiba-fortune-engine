@@ -32,6 +32,9 @@ node_modules/
 dist/
 .next/
 
+# CI生成物
+openapi.json
+
 # 配布用アーカイブ
 *.tar.gz
 setup_backend.sh

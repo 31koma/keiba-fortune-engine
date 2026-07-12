@@ -77,12 +77,11 @@ export default function Races() {
                   </p>
                 )}
 
-                <button className="quad-btn"
-                  onClick={() =>
-                    alert("4者分析(馬×騎手×今日×あなた)の画面は次のフェーズで実装します。\n物語と「今回の結論」をここで提示予定です。")
-                  }>
+                <Link className="quad-btn"
+                  href={`/reading?race=${race.id}&horse=${e.horseId}`}
+                  style={{ textDecoration: "none", textAlign: "center", display: "block" }}>
                   この馬とあなたの物語を読む
-                </button>
+                </Link>
                 <p className="quad-cap">馬 × 騎手 × 今日 × あなた — 4者分析</p>
               </article>
             );

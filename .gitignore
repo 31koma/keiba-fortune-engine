@@ -38,3 +38,16 @@ openapi.json
 # 配布用アーカイブ
 *.tar.gz
 setup_backend.sh
+
+# 作業フォルダ(セッションの一時置き場・整理対象)
+_stage2/
+_stage_kantei/
+_to_delete/
+
+# 成果物(商品・納品物はリポジトリに含めない)
+成果物_Drive/
+*.pdf
+*紙版ソース.html
+
+# 作業用アーカイブ
+*.tar

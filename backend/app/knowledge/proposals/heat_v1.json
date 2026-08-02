@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "domain": "heat_score",
+  "updated": "2026-08-02",
+  "meta": {
+    "id": "heat_v1",
+    "version": "heat/1.0",
+    "title": "熱量 v1 — 今日いちばん熱い物語の算出規則(ギャップ点なし)",
+    "status": "app_hypothesis",
+    "validation": "validation_required",
+    "created": "2026-08-02",
+    "supersedes": "heat_v0(セッション内スクリプト実装・正式版なし)",
+    "note": "熱量=設計図(収束度)に地(開催地の方位の五行)と天(当日日柱との干支相性)を重ねた、「今日、どの馬が最も設計図を活かせる日なのか」の指標。v0が持っていた人気とのギャップ点はスコアから完全に除外する(オッズ由来の成分を混ぜない)。ギャップ=「設計図上位なのに人気が薄い」の交差は、点ではなく物語チップとしてのみ提示する。勝率・的中率・レース結果の予測を表すものではない。",
+    "v0_rejection_evidence": "run6(2026-08-02, 同一382頭): 熱量v0(ギャップ込み)上位50の複勝率20.0%に対し、ギャップを外した oshi+地運+天運 は28.0%、素の収束度のみは40.0%。主犯はギャップ点(ギャップ1以上28頭の複勝14.3% 対 ギャップ0の316頭25.0%)。7/16のsynchro提案書§4-4の警告『オッズを成分に含む指標はオッズとの相関で検証できない』が実証された形。",
+    "source_ids": [
+      "app_original"
+    ],
+    "verification_plan": "熱量帯別・上位Nの複勝率を、素の収束度単独および人気帯ベースラインと同一母集団で直接比較する(run6と同形式)。地運・天運の符号は2〜3週の蓄積後に判定する(単日n≈90では判定不能)。ギャップ点を外したことで熱量はオッズ非依存となり、人気統制つきの検証が交絡なく可能になった。"
+  },
+  "formula": {
+    "expression": "heat = oshi + chi_adj + (ten - 4) * 0.5",
+    "terms": {
+      "oshi": "推し度(oshi_v0)の客観スコア。オッズ非依存",
+      "chi_adj": "地運補正。開催地の方位の五行と馬の日干の五行の生剋(chi_adjustments)",
+      "ten": "天運相性(2〜6)。馬の日柱と対象日の日柱の干スコア+支スコア(ten_scoring)"
+    },
+    "excluded_terms": {
+      "gap": "v0の『人気とのギャップ点』。run6で棄却。スコアには一切入れない(story_chipsへ降格)",
+      "user_resonance": "共鳴(あなた×馬)。実測で順位を動かさない(2026-08-02、生年月日8通りで本命不変)。物語の材料のみ"
+    }
+  },
+  "chi_adjustments": {
+    "status": "app_hypothesis(符号はrun6で一貫せず判定保留。2〜3週蓄積後に見直す)",
+    "basis": "開催地の五行 = racecourse_geography.json の方位角規則(基準点→競馬場→8方位→element_assignment)。馬の五行 = sizhu_day_pillar.json の日干のelement",
+    "values": {
+      "venue_generates_horse": {
+        "label_ja": "育",
+        "adj": 1.0,
+        "meaning_ja": "舞台が馬を育てる気。追い風の場"
+      },
+      "same": {
+        "label_ja": "同",
+        "adj": 0.5,
+        "meaning_ja": "同じ気。慣れた場"
+      },
+      "no_relation": {
+        "label_ja": "並",
+        "adj": 0.0,
+        "meaning_ja": "五行が定まらない場合のみ(通常は発生しない)"
+      },
+      "horse_generates_venue": {
+        "label_ja": "出",
+        "adj": -0.5,
+        "meaning_ja": "馬が舞台に気を出す。消耗しやすい場"
+      },
+      "horse_controls_venue": {
+        "label_ja": "剋",
+        "adj": -0.5,
+        "meaning_ja": "馬が舞台を剋しに行く。動かそうとして疲れる場"
+      },
+      "venue_controls_horse": {
+        "label_ja": "押",
+        "adj": -1.0,
+        "meaning_ja": "舞台に押さえられる気。窮屈な場"
+      }
+    },
+    "reconstruction_note": "v0のラベル対応(押=場に剋される/剋=場を剋しに行く)は、2026-08-02のheat_snapshotとapp_readings(id=101)の387頭全頭を逆算照合して確定した(387/387一致)。"
+  },
+  "ten_scoring": {
+    "status": "app_hypothesis(部品の関係定義はsizhu_day_pillar.jsonのestablished、点数化は独自)",
+    "range": [
+      2,
+      6
+    ],
+    "neutral": 4,
+    "weight_per_point": 0.5,
+    "stem_score": {
+      "same_stem": 3,
+      "stem_union": 3,
+      "generating_either_direction": 3,
+      "same_element_different_stem": 2,
+      "controlling_either_direction": 1,
+      "note": "干合はsizhu_day_pillar.combinations.stem_union、相生・相剋はfive_elements"
+    },
+    "branch_score": {
+      "same_branch": 3,
+      "branch_union": 3,
+      "branch_trinity_half": 2,
+      "branch_clash": 1,
+      "otherwise": 2,
+      "note": "六合・三合(半会)・冲はsizhu_day_pillar.combinations"
+    },
+    "reconstruction_note": "387/387頭の逆算照合で確定(2026-08-02)"
+  },
+  "eligibility": {
+    "exclude_conf_low": true,
+    "reason": "走歴1走以下は星の重なりが高く出やすく、v0初回でTOP15の10頭がconf low・1位が最低人気44.5倍になった。信用を一度で失う出力なので設計上除外する"
+  },
+  "story_chips": {
+    "hidden_heat": {
+      "condition": "fit_rank <= 3 かつ pop_rank - fit_rank >= 3",
+      "label_ja": "隠れ熱",
+      "line_ja": "設計図の上では今日の上位。集合意識の視線はまだ薄い一頭です。",
+      "note": "v0のギャップ点の後継。点ではなく物語として添える。閾値3はapp_hypothesis"
+    },
+    "resonance": {
+      "label_ja": "共鳴",
+      "note": "あなたと同じ干支・数字・星は物語の飾り。順位に影響させない"
+    }
+  },
+  "race_stars": {
+    "status": "app_hypothesis(v0のスケール(ギャップ込み)で切った閾値。v1はスコアが最大2点下がるため再較正が必要=validation_required)",
+    "basis": "レースの★はそのレースの最大熱量から出す(合計にすると多頭数レースが有利になる)",
+    "thresholds": [
+      {
+        "min": 9.4,
+        "stars": 6
+      },
+      {
+        "min": 8.6,
+        "stars": 5
+      },
+      {
+        "min": 7.9,
+        "stars": 4
+      },
+      {
+        "min": 7.2,
+        "stars": 3
+      },
+      {
+        "min": 6.5,
+        "stars": 2
+      },
+      {
+        "min": -99,
+        "stars": 1
+      }
+    ]
+  },
+  "framing_ja": {
+    "role": "応援したい馬(熱量)と買うべき馬(複勝期待値)は別の指標。熱量は顧客に届ける主役、期待値は検証用の物差し。混ぜない",
+    "disclaimer": "本予想は占術に基づく分析であり、レース結果を保証するものではありません。馬券の購入はご自身の判断と責任で行ってください"
+  }
+}

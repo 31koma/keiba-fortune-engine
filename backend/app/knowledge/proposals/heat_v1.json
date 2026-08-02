@@ -109,33 +109,41 @@
     }
   },
   "race_stars": {
-    "status": "app_hypothesis(v0のスケール(ギャップ込み)で切った閾値。v1はスコアが最大2点下がるため再較正が必要=validation_required)",
+    "status": "app_hypothesis / validation_required(v1スケールで再較正済み。根拠は下記derivation)",
     "basis": "レースの★はそのレースの最大熱量から出す(合計にすると多頭数レースが有利になる)",
     "thresholds": [
       {
-        "min": 9.4,
+        "min": 8.9,
         "stars": 6
       },
       {
-        "min": 8.6,
+        "min": 8.0,
         "stars": 5
       },
       {
-        "min": 7.9,
+        "min": 7.5,
         "stars": 4
       },
       {
-        "min": 7.2,
+        "min": 7.0,
         "stars": 3
       },
       {
-        "min": 6.5,
+        "min": 6.4,
         "stars": 2
       },
       {
         "min": -99,
         "stars": 1
       }
+    ],
+    "derivation": "2026-08-01/02の2日62レースのレース最大熱量(v1)の経験分布から、★6≈5%・★5≈7%・★4≈19%・★3≈26%・★2≈27%・★1≈16%になるよう切った(2026-08-02深夜)。v0閾値(9.4=★6)はギャップ点込みのスケールで、v1では★6が一つも出ない。単週末のデータによる暫定較正であり、蓄積後に見直す",
+    "v0_thresholds_for_reference": [
+      9.4,
+      8.6,
+      7.9,
+      7.2,
+      6.5
     ]
   },
   "framing_ja": {

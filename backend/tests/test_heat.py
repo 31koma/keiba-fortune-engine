@@ -109,9 +109,11 @@ def test_conf_low_excluded(engine):
 
 
 def test_race_stars(engine):
-    assert engine.race_stars(9.57) == 6
-    assert engine.race_stars(8.8) == 5
-    assert engine.race_stars(8.0) == 4
-    assert engine.race_stars(7.5) == 3
-    assert engine.race_stars(6.9) == 2
-    assert engine.race_stars(3.0) == 1
+    # v1スケールの再較正閾値(2026-08-02、2日62レースの経験分布)
+    assert engine.race_stars(9.1) == 6
+    assert engine.race_stars(8.9) == 6
+    assert engine.race_stars(8.4) == 5
+    assert engine.race_stars(7.9) == 4
+    assert engine.race_stars(7.3) == 3
+    assert engine.race_stars(6.5) == 2
+    assert engine.race_stars(6.3) == 1

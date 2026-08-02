@@ -28,7 +28,7 @@ services:
       KEIBA_DATA_PROVIDER: mock
       KEIBA_FORBIDDEN_FILTER_MODE: reject
     volumes:
-      - ../黄道十二宮、西洋占星術、数秘術/db:/kb:ro
+      - ../KomaVault/05_Knowledge/占術知識ベース_v1.3:/kb:ro
       - ./正本参照.md:/srv/正本参照.md:ro
     ports:
       - "8000:8000"

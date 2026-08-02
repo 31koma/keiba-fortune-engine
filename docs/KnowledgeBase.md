@@ -2,14 +2,14 @@
 
 ## 正本の場所と版
 
-- **正本**: Google Drive「占術アプリ知識ベース/00_正本_知識ベース_v1.2_20260712」
-  (凍結スナップショット)。作業正本はローカル選択フォルダ「黄道十二宮、西洋占星術、数秘術/db」
-- 基準: `正本参照.md`(MANIFEST_正本v1.2の写し。13ファイルのサイズ+SHA-256先頭16桁)
+- **正本**: `KomaVault/05_Knowledge/占術知識ベース_v1.3`(現行版・2026-08-02発行)
+  - v1.2は同フォルダ階層に凍結(2026-08-02にGoogle Driveから移設したもの)。旧: 黄道十二宮、西洋占星術、数秘術/db も凍結
+- 基準: `正本参照.md`(MANIFEST_正本v1.3の写し。17ファイルのサイズ+SHA-256先頭16桁)
 - 旧版(v1.1、01〜08フォルダ内のスナップショット)は参照禁止
-- 版更新手順: Driveに `00_正本_知識ベース_v1.3_日付` を新設→MANIFEST後継発行→
+- 版更新手順: KomaVault/05_Knowledge/ に `占術知識ベース_vX.Y` を新設→MANIFEST後継発行→
   `正本参照.md` のハッシュ表を更新(コード変更不要で切替できる設計を維持)
 
-## 13ファイルの役割
+## 17ファイルの役割(v1.3)
 
 | ファイル | 内容 |
 |---|---|
@@ -26,6 +26,10 @@
 | horse_data_policy.json | 馬名正規化(公式英字優先)・入力最小要件・法務チェックリスト |
 | verification_plan.json | 事前登録の検証仮説・交絡統制(出生月統制等) |
 | schema.sql | DBスキーマ(PostgreSQL想定・16テーブル) |
+| oshi_v0.json | おすすめ(推し度)v0。収束(本質×調律)を核とする最終評価の算出規則+adjustersレジストリ【v1.3収録】 |
+| sizhu_day_pillar.json | 四柱推命の日柱(十干十支・十干類象・五行・干合支合)【v1.3収録】 |
+| wuxing_correspondences.json | 五行の方位・色・季節・時刻・味の配当+職業傾向【v1.3収録】 |
+| racecourse_geography.json | JRA10場の座標・回り方向・方位角算出規則・方位→五行(地運)【v1.3収録】 |
 
 ## アプリ側の遵守事項
 
@@ -41,3 +45,5 @@
   validation_required を返す(暫定バンドはzodiac.combined_score使用と明示)
 - ingress_events テーブルのschema.sql追加(ephemeris_policy.storage_note、v1.3候補)
 - エフェメリス導入までjupiter_saturn_year / moon_day は on_hold
+
+> **v1.3注記(2026-08-02)**: `synchro_v0.json` は収録見送り。重み「あなた×馬0.20」が同日の決定「共鳴は材料に降格」と矛盾するため、重みを見直すかoshiへ一本化するまで `backend/app/knowledge/proposals/` に留置する。

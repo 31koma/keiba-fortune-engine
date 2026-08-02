@@ -33,6 +33,12 @@ REQUIRED_KEYS: dict[str, list[str]] = {
                               "cusp_determination_spec"],
     "horse_data_policy.json": ["input_minimum", "name_normalization"],
     "verification_plan.json": ["hypotheses", "lock_rule"],
+    # v1.3で収録(2026-08-02): 13→17ファイル
+    "oshi_v0.json": ["meta", "core", "score_bands", "adjusters", "recommendation"],
+    "sizhu_day_pillar.json": ["calculation", "stems", "branches",
+                              "five_elements", "combinations"],
+    "wuxing_correspondences.json": ["correspondences", "vocation_tendency"],
+    "racecourse_geography.json": ["courses", "bearing_rule", "element_assignment"],
 }
 
 

@@ -12,8 +12,12 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="KEIBA_", env_file=".env", extra="ignore")
 
     # --- 知識ベース(唯一の正本) ---
-    kb_dir: Path = PROJECT_ROOT.parent / "黄道十二宮、西洋占星術、数秘術" / "db"
-    manifest_md: Path = PROJECT_ROOT / "正本参照.md"  # MANIFEST_正本v1.2の写し(ハッシュ表)
+    kb_dir: Path = PROJECT_ROOT.parent / "KomaVault" / "05_Knowledge" / "占術知識ベース_v1.3"
+    # 2026-08-02: v1.3へ版上げ(13→17ファイル。oshi_v0/sizhu_day_pillar/wuxing_correspondences/
+    # racecourse_geography を収録)。v1.2は凍結。
+    # 2026-08-02: 正本をKomaVaultへ移設(Googleドライブ撤退に伴う憲章第2条改訂)。
+    # 旧: PROJECT_ROOT.parent / "黄道十二宮、西洋占星術、数秘術" / "db"(凍結・参照しない)
+    manifest_md: Path = PROJECT_ROOT / "正本参照.md"  # MANIFEST_正本v1.3の写し(ハッシュ表)
     strict_startup: bool = False  # True: 検証不一致で起動失敗 / False: degraded状態で起動
 
     # --- DB ---
@@ -25,6 +29,12 @@ class Settings(BaseSettings):
     data_provider_name: str = "Mock Data Provider"
     data_provider_credit: str = "データ提供: モック(開発用固定データ)"
     data_provider_license_status: str = "development_only"
+
+    # --- JRDB(実データ。個人利用契約・再配信にはJRA商用契約が別途必要) ---
+    jrdb_data_dir: Path = APP_ROOT / "data" / "jrdb"  # 展開済み.txtの置き場
+    jrdb_base_url: str = "http://www.jrdb.com/member/data"  # 会員登録後に実パス確認
+    jrdb_user: str = ""       # .envで設定(コミット禁止)
+    jrdb_password: str = ""   # .envで設定(コミット禁止)
 
     # --- 禁止語フィルタ(語彙は正本から。ここはモードのみ) ---
     forbidden_filter_mode: Literal["reject", "redact", "regenerate"] = "reject"

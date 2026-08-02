@@ -8,6 +8,10 @@ class HorseDataProvider(ABC):
     @abstractmethod
     def get_horse(self, horse_id: str) -> HorseDTO | None: ...
 
+    def get_recent_positions(self, horse_id: str) -> list[int] | None:
+        """直近の着順系列(新しい順)。未対応プロバイダはNone(戦績数秘は擬似系列で動く)。"""
+        return None
+
 
 class JockeyDataProvider(ABC):
     @abstractmethod
@@ -17,6 +21,10 @@ class JockeyDataProvider(ABC):
 class RaceDataProvider(ABC):
     @abstractmethod
     def get_race(self, race_id: str) -> RaceDTO | None: ...
+
+    def list_races(self, race_date) -> list[RaceDTO]:
+        """指定日の開催レース一覧。未対応プロバイダは空リスト(オプション機能)。"""
+        return []
 
 
 class RaceResultProvider(ABC):

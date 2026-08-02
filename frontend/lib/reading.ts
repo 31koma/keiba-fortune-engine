@@ -4,6 +4,7 @@
 // 正式な統合スコア・重みは正本側で未定義(validation_required)。
 import { MOCK_RACES, MockRace, MockEntry } from "./mock";
 import { dayTheme, lifePath, personalDay, sunSign } from "./preview";
+import { computeSynchro, SyncPattern } from "./synchro";
 
 const digits = (n: number) => String(n).split("").reduce((a, c) => a + +c, 0);
 const reduce = (n: number) => { while (n > 9 && ![11, 22, 33].includes(n)) n = digits(n); return n; };
@@ -37,10 +38,11 @@ export type QuadPerson = {
 };
 
 export type SyncScore = {
-  score: number;        // 0.0〜10.0(開発用の暫定Mock値。正式な統合スコアは正本未定義)
+  score: number;        // 0.0〜10.0(synchro_v0規則・app_hypothesis。正式版は正本収録後)
   stars: number;        // 0〜10
   label: string;
   tier: "gold" | "green" | "blue" | "orange" | "red";
+  pattern: SyncPattern; // 集合意識(オッズ)×占術の4象限
 };
 
 export type QuadReading = {
@@ -101,21 +103,13 @@ export function buildQuadReading(
       ? "展開との相性を確認したい組み合わせ"
       : "慎重に評価したい組み合わせ";
 
-  // ---- 今日のシンクロ度(開発用の暫定Mock。4者の調和度であり勝率・結果予測ではない) ----
-  const fine = ((horse.pd! * 7 + jockey.pd! * 5 + user.pd! * 3 + ud) % 15) / 10; // 0.0〜1.4
-  const syncScore = Math.min(10,
-    overlap >= 3 ? 8.4 + fine : overlap === 2 ? 6.4 + fine : 4.4 + fine);
-  const score = Math.round(syncScore * 10) / 10;
-  const tier = score >= 9 ? "gold" : score >= 8 ? "green" : score >= 6 ? "blue"
-    : score >= 4 ? "orange" : "red";
-  const syncLabel = score >= 9 ? "かなり流れが噛み合う日"
-    : score >= 8 ? "流れが噛み合いやすい日"
-      : score >= 6 ? "噛み合わせ次第の日"
-        : score >= 4 ? "リズムの違いを楽しむ日" : "別々の流れの日";
+  // ---- 今日のシンクロ度(synchro_v0規則: 4者調和+集合意識(オッズ)。結果予測ではない) ----
+  const sy = computeSynchro(entry, race, userBirth);
 
   return {
     race, entry, horse, jockey, race_day, user,
-    sync: { score, stars: Math.round(score), label: syncLabel, tier },
+    sync: { score: sy.score, stars: Math.round(sy.score), label: sy.label,
+      tier: sy.tier, pattern: sy.pattern },
     conclusion: {
       title: overlap >= 3
         ? "同じ方向を向きやすい組み合わせ"
@@ -153,6 +147,7 @@ export function buildQuadReading(
       "numerology.life_path / personal_day / universal_day(正本式・preview実装)",
       "zodiac.sun_sign(tropical・境界±1日)",
       "group法・役割づけ(Mock: 正式は知識ベース合成規則step0-5)",
+      "synchro_score_v0(4者調和+集合意識=オッズ。app_hypothesis・正本v1.3収録候補)",
     ],
     hypothesis_status: "app_hypothesis",
     validation_status: "validation_required(統合スコアは正本側で未定義)",

@@ -32,6 +32,9 @@ class RaceEntryDTO(BaseModel):
     horse_id: str
     jockey_id: str
     post_number: int | None = None
+    # 単勝オッズ(取得時点のスナップショット)。未取得はNone。
+    # 占術エンジンでは「集合意識の注目度」の近似としてのみ扱う(結果予測ではない)
+    win_odds: float | None = None
 
 
 class RaceDTO(BaseModel):
@@ -41,6 +44,7 @@ class RaceDTO(BaseModel):
     racecourse: str
     race_number: int
     race_name: str
+    start_time: str | None = None  # "HH:MM"(発走予定)
     distance: int
     surface: str
     race_class: str | None = None

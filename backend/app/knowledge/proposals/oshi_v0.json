@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.0",
+  "domain": "oshi_score",
+  "updated": "2026-08-02",
+  "meta": {
+    "id": "oshi_v0",
+    "version": "oshi/1.0",
+    "title": "おすすめ(推し度)v0 — 収束を核とする最終評価の算出規則",
+    "status": "app_hypothesis",
+    "validation": "validation_required",
+    "created": "2026-07-19",
+    "note": "由来の異なる独立レンズ——本質(純占術: 馬×騎手の調和+馬×レース日の流れ)と調律(戦績の波形)——が同じ方向を向く『収束』を核に、この馬を推したい理由とともに提示する最終評価。収束は核であって、おすすめそのものと同義ではない: 検証で有効性が確認された新しい独立要素(adjusters)を段階的に組み込む。オッズ(集合意識)はスコアに使用しない(人気ベースラインとの比較による検証可能性を保つため)。集合意識は『隠れ推し』の物語チップとしてのみ参照する。勝率・的中率・レース結果の予測を表すものではない。 役割分担: 数(調律/choritsu)は今後も戦績・波形・数理解析のみを担当し、環境要因(ペース・トラックバイアス・枠順・血統・馬場・距離・季節等)の拡張は本規則のadjustersが受ける。収(oshi)は星読みターフ全体の最終評価であり、検証を通った要素を取り込んで進化していく指標である。",
+    "source_ids": [
+      "app_original"
+    ],
+    "verification_plan": "推し帯別(整数丸め)の勝率・複勝率を人気帯ベースライン(1-3/4-6/7+)と比較する。本スコアはオッズ非依存のため、この比較が交絡なく仮説の生死判定になる。週末の自動検証(verification_runs)へ組み込む。"
+  },
+  "core": {
+    "desc": "E=本質(synchro_v0のharmony・day_flowを再正規化した加重平均)、C=調律(choritsuスコア)。base=調和平均 2EC/(E+C)。片方だけ高くても伸びず、両方が揃うと伸びる=収束の数式化。",
+    "essence_weights": {
+      "harmony": 0.3,
+      "day_flow": 0.25
+    },
+    "composition": "harmonic_mean",
+    "choritsu_insufficient": {
+      "desc": "調律が解析不能(0走)の場合は E のみを base とし、confidence=low を明示する。値をでっち上げない。",
+      "confidence": "low"
+    },
+    "confidence_bands": {
+      "desc": "調律の信頼度(走数/理想5走)から推し度の確信度を3段階で表す。full>=0.8(4-5走) / medium>=0.4(2-3走) / low(1走以下・解析不能)",
+      "full": 0.8,
+      "medium": 0.4
+    }
+  },
+  "bonuses": [
+    {
+      "id": "rhythm_up",
+      "label_ja": "律の上げ局面",
+      "when": {
+        "kind": "signal_at_least",
+        "signal": "rhythm",
+        "threshold": 7.0
+      },
+      "add": 0.4
+    },
+    {
+      "id": "resilience",
+      "label_ja": "戻る力",
+      "when": {
+        "kind": "signal_at_least",
+        "signal": "resilience",
+        "threshold": 7.0
+      },
+      "add": 0.2
+    },
+    {
+      "id": "user_same_number",
+      "label_ja": "あなたと同じ数",
+      "when": {
+        "kind": "user_condition_in",
+        "conditions": [
+          "same_number"
+        ]
+      },
+      "add": 0.3
+    },
+    {
+      "id": "user_same_group",
+      "label_ja": "あなたと同じグループ",
+      "when": {
+        "kind": "user_condition_in",
+        "conditions": [
+          "same_group"
+        ]
+      },
+      "add": 0.15
+    }
+  ],
+  "reasons": {
+    "desc": "発火した条件から優先順に最大 max_reasons 件を『この馬を推す理由』として提示。文言は禁止語フィルタを必ず通す。 positive_min_score未満のスコアでは前向き理由を出さず、fallbackのみを提示する(低い収束に推す理由を付けない誠実原則)。fallbackは他の理由が無い場合のみ。",
+    "max_reasons": 2,
+    "templates": [
+      {
+        "id": "convergence",
+        "when": {
+          "kind": "convergence",
+          "max_gap": 1.5,
+          "min_both": 6.5
+        },
+        "line": "星の配置(本質)と戦績の波形(調律)が、同じ方向を向いています。由来の違う2つの読みが重なる、数少ない配置です。"
+      },
+      {
+        "id": "rhythm_up",
+        "when": {
+          "kind": "signal_at_least",
+          "signal": "rhythm",
+          "threshold": 7.0
+        },
+        "line": "着順の並びが描く周期の続きが、ちょうど上げ局面にあたる配置です。"
+      },
+      {
+        "id": "day_flow_same_number",
+        "when": {
+          "kind": "day_flow_condition_in",
+          "conditions": [
+            "same_number"
+          ]
+        },
+        "line": "この馬のパーソナルデイが、今日という日の数とぴったり重なっています。"
+      },
+      {
+        "id": "harmony_high",
+        "when": {
+          "kind": "component_at_least",
+          "component": "harmony",
+          "threshold": 8.0
+        },
+        "line": "馬と騎手——2つの生まれ日の数字と星座が、よく調和する組み合わせです。"
+      },
+      {
+        "id": "resilience",
+        "when": {
+          "kind": "signal_at_least",
+          "signal": "resilience",
+          "threshold": 7.0
+        },
+        "line": "崩れたあとに戻る力が、数字に表れています。"
+      },
+      {
+        "id": "user_same_number",
+        "when": {
+          "kind": "user_condition_in",
+          "conditions": [
+            "same_number"
+          ]
+        },
+        "line": "あなたと馬のパーソナルデイが同じ数です。今日のこの馬は、あなたと同じ流れの中にいます。"
+      },
+      {
+        "id": "keynote_high",
+        "when": {
+          "kind": "signal_at_least",
+          "signal": "keynote",
+          "threshold": 7.5
+        },
+        "line": "波の高さそのもの——基調が高い位置で続いています。"
+      },
+      {
+        "id": "no_convergence",
+        "when": {
+          "kind": "fallback"
+        },
+        "line": "本質と調律の方向は、今日はまだ揃っていません。一歩引いて全体を眺めたい配置です。"
+      }
+    ],
+    "positive_min_score": 6.0
+  },
+  "hidden_chip": {
+    "desc": "集合意識の注目(collective)が薄いのに推しスコアが高い馬に付す物語チップ。オッズはこの判定にのみ参照し、スコアには一切加えない。",
+    "attention_below": 5.0,
+    "score_at_least": 7.0,
+    "label_ja": "隠れ推し",
+    "line": "集合意識の視線はまだ薄い一頭です。星と戦績の読みだけが、静かにこの馬に重なっています。"
+  },
+  "score_bands": [
+    {
+      "min": 9.0,
+      "tier": "gold",
+      "label_ja": "強い収束 — 星と戦績が重なる一頭"
+    },
+    {
+      "min": 8.0,
+      "tier": "green",
+      "label_ja": "収束 — 推す理由が揃っています"
+    },
+    {
+      "min": 6.0,
+      "tier": "blue",
+      "label_ja": "部分収束 — どちらかが一歩先"
+    },
+    {
+      "min": 4.0,
+      "tier": "orange",
+      "label_ja": "拡散 — 方向はまだ揃いません"
+    },
+    {
+      "min": 0.0,
+      "tier": "red",
+      "label_ja": "無収束 — 別々の物語の日"
+    }
+  ],
+  "adjusters": {
+    "desc": "将来の独立要素の拡張レジストリ。検証(verification_runs)で有効性が確認されるまで weight=0(点数に不参加)。組み込みは本JSONの weight 変更+新versionの登録のみで行い、コード変更を要しない設計とする。",
+    "policy": "verification_required_before_weighting",
+    "slots": [
+      {
+        "id": "waku_draw",
+        "label_ja": "枠順×頭数",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "provider(出走表)"
+      },
+      {
+        "id": "track_bias",
+        "label_ja": "トラックバイアス",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB SRB"
+      },
+      {
+        "id": "pace",
+        "label_ja": "ペース適性",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB KYI/SED"
+      },
+      {
+        "id": "bloodline",
+        "label_ja": "血統適性",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB UKC ほか"
+      },
+      {
+        "id": "condition",
+        "label_ja": "馬場状態",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB 当日情報"
+      },
+      {
+        "id": "distance",
+        "label_ja": "距離適性",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB SED(距離別成績)"
+      },
+      {
+        "id": "season",
+        "label_ja": "季節補正",
+        "weight": 0,
+        "status": "on_hold(not_scored: 検証で有効性が確認されるまでweight=0)",
+        "data_source": "JRDB SED(季節別成績)"
+      }
+    ]
+  },
+  "framing_ja": "おすすめ=本質(占術)と調律(戦績)の収束が強い組み合わせ。馬券購入の推奨ではなく、観戦の視点の提案である。",
+  "recommendation": {
+    "desc": "対象日の全出走を推し度降順に提示し、最上位を『この日のおすすめ』とする。タイブレーク: synchroパターン hidden > resonance > その他(物語性優先)、同点はレース番号・馬番昇順。旧規則(synchro_score_v0降順)から2026-07-19に変更。 確信度low(走歴1走以下・解析不能)の馬は『この日のおすすめ』の看板には据えない(一覧の並びはスコアどおり)。該当馬しかいない場合のみ最上位を提示する。",
+    "framing_ja": "おすすめ=本質(占術)と調律(戦績)の収束が強い組み合わせ。馬券購入の推奨ではなく、観戦の視点の提案である。"
+  }
+}

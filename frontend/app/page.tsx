@@ -3,18 +3,107 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Orbit from "./components/Orbit";
 import BirthdateModal from "./components/BirthdateModal";
+import GuideCard from "./components/GuideCard";
 import { lifePath, sunSign } from "@/lib/preview";
+import { dayRecommendations, SYNC_FRAMING } from "@/lib/synchro";
+import { ApiDayRecommendations, fetchDayRecommendations } from "@/lib/api";
+import { birthdateEnabled, effectiveBirth, setBirthdateEnabled } from "@/lib/settings";
+
+function TodayRecommendation({ birth }: { birth: string | null }) {
+  const [api, setApi] = useState<ApiDayRecommendations | null>(null);
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    fetchDayRecommendations(birth).then((d) => { setApi(d); setChecked(true); });
+  }, [birth]);
+
+  // ---- 実データ(バックエンドAPI) ----
+  if (api?.recommendation) {
+    const r = api.recommendation;
+    const s = r.synchro;
+    const o = r.oshi ?? null;  // 旧バックエンド互換(無ければシンクロ度表示)
+    return (
+      <section className={`reco-card sync-${(o ?? s).tier}`}>
+        <div className="reco-head">
+          <span className="reco-tag">✦ {api.target_date} のおすすめ</span>
+          <span className="reco-race">
+            {r.race_name && r.race_name !== "レース"
+              ? `${r.race_name}・${r.racecourse}${r.race_number}R`
+              : `${r.racecourse}${r.race_number}R`}
+          </span>
+        </div>
+        <div className="reco-main">
+          <div className="reco-horse">
+            <div className="reco-name">{r.horse_name}</div>
+            <div className="reco-sub">
+              {r.post_number}番・鞍上 {r.jockey_name}
+              {r.win_odds ? `・単勝${r.win_odds}` : ""}
+            </div>
+          </div>
+          <div className="reco-score">
+            <span className="sync-score" style={{ fontSize: 34 }}>
+              {(o ?? s).score.toFixed(1)}<span className="sync-max" style={{ fontSize: 13 }}> /10</span>
+            </span>
+            <span className="reco-score-key">{o ? "収束度" : "シンクロ度"}</span>
+          </div>
+        </div>
+        <div className={`pattern-chip pattern-${s.pattern.type}`}>{s.pattern.label_ja}</div>
+        <p className="pattern-line">{o?.reasons[0]?.line ?? s.pattern.line}</p>
+        <Link className="reco-btn" href={`/races?race=${r.race_id}&horse=${r.horse_id}`}>
+          この馬の詳細を見る(主/客/本/数/収)
+        </Link>
+        <p className="reco-note">{api.framing}({api.provider_credit.data_provider_credit})</p>
+      </section>
+    );
+  }
+
+  // ---- フォールバック(API不達時: 開発用Mock) ----
+  if (!checked) return null;
+  const top = dayRecommendations(birth)[0];
+  if (!top) return null;
+  const { race, entry, synchro } = top;
+  return (
+    <section className={`reco-card sync-${synchro.tier}`}>
+      <div className="reco-head">
+        <span className="reco-tag">✦ 今日のおすすめ(Mock)</span>
+        <span className="reco-race">{race.name}・{race.number}R</span>
+      </div>
+      <div className="reco-main">
+        <div className="reco-horse">
+          <div className="reco-name">{entry.horseName}</div>
+          <div className="reco-sub">{entry.post}番・鞍上 {entry.jockeyName}</div>
+        </div>
+        <div className="reco-score">
+          <span className="sync-score" style={{ fontSize: 34 }}>
+            {synchro.score.toFixed(1)}<span className="sync-max" style={{ fontSize: 13 }}> /10</span>
+          </span>
+          <span className="reco-score-key">シンクロ度</span>
+        </div>
+      </div>
+      <div className={`pattern-chip pattern-${synchro.pattern.type}`}>{synchro.pattern.label}</div>
+      <p className="pattern-line">{synchro.pattern.line}</p>
+      <Link className="reco-btn" href={`/reading?race=${race.id}&horse=${entry.horseId}`}>
+        {birth ? "この馬とあなたの物語を読む" : "この馬の物語を読む"}
+      </Link>
+      <p className="reco-note">{SYNC_FRAMING}</p>
+    </section>
+  );
+}
 
 export default function Home() {
   const [modal, setModal] = useState(false);
   const [birth, setBirth] = useState<string | null>(null);
-  useEffect(() => { setBirth(localStorage.getItem("birthdate")); }, []);
+  const [useBirth, setUseBirth] = useState(true);
+  useEffect(() => {
+    setBirth(localStorage.getItem("birthdate"));
+    setUseBirth(birthdateEnabled());
+  }, []);
+  const effBirth = effectiveBirth(birth, useBirth);
 
   return (
     <main>
       <section className="hero">
         <div className="brand-en">Hoshiyomi Turf</div>
-        <h1 className="brand">星読みターフ <small>(仮称)</small></h1>
+        <h1 className="brand">星読みターフ</h1>
         <p className="catch">星と数字で、<em>レースを読む。</em></p>
         <p className="lede">
           その馬の生まれ日。騎手の数字。今日の星回り。そして、あなた。
@@ -22,20 +111,44 @@ export default function Home() {
       </section>
 
       <div className="orbit-wrap">
-        <Orbit userActive={!!birth} />
+        <Orbit userActive={!!effBirth} />
       </div>
       <p className="orbit-caption">
         4つの生まれ日が交わる一点に、あなただけのレースの物語が生まれます。
       </p>
 
+      <TodayRecommendation birth={effBirth} />
+
+      <GuideCard />
+
       <Link href="/races" className="cta">今日のレースを見る</Link>
+      <Link href="/past" className="cta-past">
+        過去レースを見る
+        <span className="cta-past-sub">レース前の評価と確定結果を見比べる</span>
+      </Link>
       <button className={`cta-sub ${birth ? "registered" : ""}`} onClick={() => setModal(true)}>
         {birth ? "あなたのプロフィール(変更する)" : "自分の生年月日を登録する"}
       </button>
       {birth ? (
-        <p className="cta-note you-chip">
-          あなた: ライフパス {lifePath(birth)}・{sunSign(birth).ja} — 4者分析の準備完了
-        </p>
+        <>
+          <label className="cta-note" style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: 8, cursor: "pointer" }}>
+            <input type="checkbox" checked={useBirth}
+              onChange={(e) => { setUseBirth(e.target.checked);
+                setBirthdateEnabled(e.target.checked); }} />
+            あなたの誕生日を鑑定に使用する
+          </label>
+          {useBirth ? (
+            <p className="cta-note you-chip">
+              あなた: ライフパス {lifePath(birth)}・{sunSign(birth).ja} — 4者分析の準備完了
+            </p>
+          ) : (
+            <p className="cta-note">
+              いまは「あなた」を除いた客観鑑定を表示しています(誕生日はいつでも戻せます)
+            </p>
+          )}
+        </>
       ) : (
         <p className="cta-note">登録すると「あなた」の軌道が加わり、4者分析になります</p>
       )}
@@ -43,6 +156,7 @@ export default function Home() {
       <div className="home-links">
         <Link href="/you">あなたを見る</Link>
         <Link href="/compat">相性をみる</Link>
+        <Link href="/plans">プラン</Link>
       </div>
 
       <section className="section">

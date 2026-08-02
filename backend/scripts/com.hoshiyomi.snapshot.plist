@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.hoshiyomi.snapshot</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ks/Documents/競馬アプリ/backend/.venv/bin/python</string>
+        <string>/Users/ks/Documents/競馬アプリ/backend/scripts/save_snapshots.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/ks/Documents/競馬アプリ/backend</string>
+    <key>StartCalendarInterval</key>
+    <array>
+        <!-- 金・土 21:30(JRDB自動取得21:00の後に翌日分を保存) -->
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>21</integer><key>Minute</key><integer>30</integer></dict>
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>21</integer><key>Minute</key><integer>30</integer></dict>
+        <!-- 土・日 8:00(前夜に保存できなかった場合の朝の保険。発走後は保存しない) -->
+        <dict><key>Weekday</key><integer>6</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+        <dict><key>Weekday</key><integer>0</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+    <key>StandardOutPath</key>
+    <string>/Users/ks/Documents/競馬アプリ/backend/logs/snapshot.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/ks/Documents/競馬アプリ/backend/logs/snapshot.log</string>
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

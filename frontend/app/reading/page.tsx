@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import BirthdateModal from "../components/BirthdateModal";
 import Orbit from "../components/Orbit";
 import { buildQuadReading, QuadPerson } from "@/lib/reading";
+import { birthdateEnabled, effectiveBirth } from "@/lib/settings";
 
 function PersonCard({ p }: { p: QuadPerson }) {
   return (
@@ -29,7 +30,11 @@ function ReadingBody() {
   const [birth, setBirth] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState(false);
-  useEffect(() => { setBirth(localStorage.getItem("birthdate")); setReady(true); }, []);
+  useEffect(() => {
+    // 「誕生日を鑑定に使用する」OFFなら、あなたの占術要素を除いた客観鑑定へ
+    setBirth(effectiveBirth(localStorage.getItem("birthdate"), birthdateEnabled()));
+    setReady(true);
+  }, []);
 
   if (!ready) return <main />;
 
@@ -87,9 +92,14 @@ function ReadingBody() {
           {r.sync.score.toFixed(1)}<span className="sync-max"> / 10</span>
         </div>
         <div className="sync-word">{r.sync.label}</div>
+        <div className={`pattern-chip pattern-${r.sync.pattern.type}`}>
+          {r.sync.pattern.label}
+        </div>
+        <p className="pattern-line">{r.sync.pattern.line}</p>
         <p className="sync-note">
-          4者(馬・騎手・レース日・あなた)の占術的な調和度です。
-          レース結果や勝率ではありません。※開発用の暫定値(Mock)
+          4者(馬・騎手・レース日・あなた)の占術的な調和度に、
+          集合意識(オッズ=市場の注目)との共鳴を重ねた値です。
+          レース結果や勝率ではありません。※synchro_v0規則(検証前の仮説)
         </p>
       </section>
 

@@ -99,6 +99,135 @@ def test_day_fortune(client):
     assert "interpretation_parts" in body
 
 
+def test_readings_persisted(client):
+    """鑑定がapp_readingsへ保存され、engine_ver=知識ベース版が記録されること。"""
+    kb_ver = client.get("/health").json()["knowledge_base"]["version"]
+    tr = client.post("/v1/readings/horse-triad", json={
+        "horse_id": "H001", "jockey_id": "J001", "race_id": "R001"}).json()
+    assert isinstance(tr["reading_id"], int)
+    dr = client.get("/v1/day-recommendations",
+                    params={"target_date": "2026-07-26"}).json()
+    assert isinstance(dr["reading_id"], int)
+
+    lst = client.get("/v1/readings").json()["items"]
+    assert len(lst) >= 2
+    latest = lst[0]
+    assert latest["kind"] == "day_recommendation"
+    assert latest["engine_ver"] == kb_ver
+    assert latest["rules_ver"] == "oshi_v0"  # 2026-07-19: おすすめ選定は推し度基準
+
+    detail = client.get(f"/v1/readings/{tr['reading_id']}").json()
+    assert detail["kind"] == "horse_triad"
+    assert detail["payload"]["validation_status"] == "validation_required"
+    assert client.get("/v1/readings/999999").status_code == 404
+
+
+def test_synchro_deterministic(kb):
+    """シンクロ度が決定的で0..10に収まり、規則JSON(app_hypothesis)駆動であること。"""
+    from datetime import date
+    from app.domain.engine.numerology import Numerology
+    from app.domain.engine.synchro import SynchroEngine
+    from app.domain.engine.zodiac import Zodiac
+    from app.providers.mock import MockDataProvider
+    p = MockDataProvider()
+    eng = SynchroEngine(kb, Numerology(kb), Zodiac(kb))
+    race = p.get_race("R001")
+    r1 = eng.compute(p.get_horse("H001"), p.get_jockey("J001"), race,
+                     date(2026, 7, 26), 2.4, date(1992, 5, 5))
+    r2 = eng.compute(p.get_horse("H001"), p.get_jockey("J001"), race,
+                     date(2026, 7, 26), 2.4, date(1992, 5, 5))
+    assert r1 == r2  # 決定的
+    assert 0.0 <= r1["score"] <= 10.0
+    assert r1["hypothesis_status"] == "app_hypothesis"
+    assert r1["validation_status"] == "validation_required"
+    assert r1["pattern"]["type"] in ("resonance", "hidden", "heat", "quiet")
+    # 集合意識: オッズが低い(支持が厚い)ほど注目度が高い
+    low = eng.collective(2.0)["score"]
+    high = eng.collective(50.0)["score"]
+    assert low > high
+    # オッズ未取得は中立5.0
+    assert eng.collective(None)["score"] == 5.0
+
+
+def test_day_recommendations(client):
+    r = client.get("/v1/day-recommendations", params={
+        "target_date": "2026-07-26", "user_birth_date": "1992-05-05"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["user_included"] is True
+    assert body["recommendation"] is not None
+    assert len(body["items"]) == 4  # R001×2頭 + R002×2頭
+    scores = [it["oshi"]["score"] for it in body["items"]]
+    assert scores == sorted(scores, reverse=True)  # 推し度降順(最終評価で統一)
+    assert body["rule"] == "oshi_v0"
+    assert body["recommendation"]["oshi"]["score"] == scores[0]
+    # 戦績数秘・調律理論(独自指標): 0-10・本実装(mockでない)・4信号
+    for it in body["items"]:
+        pn = it["pattern_numerology"]
+        assert 0.0 <= pn["score"] <= 10.0
+        assert pn["mock"] is False and pn["version"] == "choritsu/1.1"
+        assert pn["insufficient"] is False  # mock providerは全馬に戦績あり
+        assert pn["mode"] == "full"  # mockは5走=理想窓
+        assert pn["confidence"] == 1.0
+        assert set(pn["signals"]) == {"phase", "rhythm", "resilience", "keynote"}
+    # おすすめ(推し度): 全馬に付与・オッズ非依存・理由と正直な限界表示
+    for it in body["items"]:
+        o = it["oshi"]
+        assert 0.0 <= o["score"] <= 10.0
+        assert o["version"] == "oshi/1.0"
+        assert o["confidence"] in ("full", "medium", "low")
+        assert len(o["reasons"]) >= 1
+        assert o["adjusters"]["applied"] == []  # v0: 検証前の要素は不参加
+        assert o["hypothesis_status"] == "app_hypothesis"
+    assert body["validation_status"] == "validation_required"
+    assert "エンターテインメント" in body["disclaimer"]
+    # 提示文言が禁止語ゼロであること
+    from app.main import STATE
+    for it in body["items"]:
+        assert STATE["filter"].find(it["synchro"]["pattern"]["line"]) == []
+    assert STATE["filter"].find(body["framing"]) == []
+    # 利用者なしでも動作(重みを再正規化)
+    r2 = client.get("/v1/day-recommendations", params={"target_date": "2026-07-26"})
+    assert r2.status_code == 200
+    assert r2.json()["user_included"] is False
+    # 同一条件の再取得は同じreading_idを返す(重複保存しない)
+    r3 = client.get("/v1/day-recommendations", params={"target_date": "2026-07-26"})
+    assert r3.json()["reading_id"] == r2.json()["reading_id"]
+
+
+def test_choritsu_analyzer():
+    """調律理論v1: 決定的・境界・構造感度(上昇系列>下降系列)・データ不足の明示。"""
+    from app.domain.engine.pattern_numerology import analyze, quality
+    # 質変換の性質: 1着と2着の差 > 11着と12着の差(非線形)
+    assert (quality(1) - quality(2)) > (quality(11) - quality(12))
+    assert quality(1) == 1.0 and quality(18) == 0.0
+    # 決定的
+    a = analyze([1, 2, 1, 5, 3])
+    assert a.score == analyze([1, 2, 1, 5, 3]).score
+    assert a.mock is False and 0.0 <= a.score <= 10.0
+    # 構造感度: 良化中(新しい順で上昇)は悪化中(その逆)より高い
+    improving = analyze([1, 2, 4, 7, 10])   # 新しい順=直近1着へ良化
+    declining = analyze([10, 7, 4, 2, 1])   # 直近10着へ悪化
+    assert improving.score > declining.score
+    # v1.1 適応解析: 走数に応じてモード切替、1走でも読める
+    assert analyze([1, 2, 4, 7, 10]).mode == "full"      # 4-5走: 4信号
+    trio = analyze([2, 5, 3])                            # 2-3走: 律を除く3信号
+    assert trio.mode == "trio" and set(trio.signals) == {"phase", "resilience", "keynote"}
+    solo = analyze([1])                                  # 1走: 基調のみ
+    assert solo.mode == "solo" and set(solo.signals) == {"keynote"}
+    assert solo.insufficient is False and solo.confidence == 0.2
+    # 縮約: 1走1着でも満点にはならない(中立5.0へ寄せる)
+    assert solo.score < 7.0
+    # 信頼度は走数に単調
+    assert analyze([1, 2, 1, 5, 3]).confidence > trio.confidence > solo.confidence
+    # 解析不能=0走のみ。でっち上げない
+    none = analyze(None)
+    assert none.insufficient is True and none.mode == "none" and none.score == 5.0
+    # 旧版 v1.0 はレジストリに残っている(2走未満はデータ不足)
+    old_v = analyze([3], analyzer="choritsu/1.0")
+    assert old_v.insufficient is True and old_v.version == "choritsu/1.0"
+
+
 def test_triad(client):
     r = client.post("/v1/readings/horse-triad", json={
         "horse_id": "H001", "jockey_id": "J001", "race_id": "R001"})

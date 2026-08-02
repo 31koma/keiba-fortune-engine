@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "id": "synchro_score_v0",
+    "title": "今日のシンクロ度 v0 — 算出規則(正本v1.3収録候補)",
+    "status": "app_hypothesis",
+    "validation": "validation_required",
+    "created": "2026-07-16",
+    "note": "4者(競走馬・騎手・レース日・利用者)の占術的調和度と、集合意識(オッズ=市場の注目)との共鳴度を10点尺度で表す。勝率・的中率・レース結果の予測を表すものではない。本規則はアプリ側仮説であり、正本(知識ベース)への収録・検証計画の確定をもって正式版とする。",
+    "source_ids": ["app_hypothesis"],
+    "verification_plan": "出生月統制等の交絡制御を含む統計検証(verification_plan準拠)を正本収録時に定義する"
+  },
+  "components": {
+    "harmony": {
+      "label_ja": "馬×騎手の調和",
+      "desc": "zodiac.combined_score(1..3)とnumerology.group_method(1..3)を各10点に正規化し平均",
+      "normalize": "score10 = (raw - 1) / 2 * 10"
+    },
+    "day_flow": {
+      "label_ja": "馬×レース日の流れ",
+      "desc": "馬のパーソナルデイとユニバーサルデイの数・グループ一致で判定",
+      "map": { "same_number": 10.0, "same_group": 7.5, "different": 4.5 }
+    },
+    "user_resonance": {
+      "label_ja": "あなた×馬の響き",
+      "desc": "利用者のパーソナルデイと馬のパーソナルデイの数・グループ一致、次点でユニバーサルデイとの一致",
+      "map": { "same_number": 10.0, "same_group": 8.0, "universal_match": 6.0, "different": 4.5 }
+    },
+    "collective": {
+      "label_ja": "集合意識の注目",
+      "desc": "単勝オッズを集合意識(市場に集まる意識の総量)の近似とみなす。支持率近似 s = takeout / odds を対数尺度で10点化",
+      "takeout_assumption": 0.8,
+      "clip_min": 0.01,
+      "clip_max": 0.95,
+      "formula": "attention10 = clamp(5 * log10(100 * s), 0, 10)"
+    }
+  },
+  "weights": {
+    "with_user": { "harmony": 0.30, "day_flow": 0.25, "user_resonance": 0.20, "collective": 0.25 },
+    "without_user": { "harmony": 0.375, "day_flow": 0.3125, "collective": 0.3125 }
+  },
+  "patterns": {
+    "desc": "占術の流れ(flow=collective以外の加重平均)と集合意識(attention)の関係を4象限で分類する",
+    "thresholds": { "flow_high": 7.0, "flow_low": 5.5, "attention_high": 7.0, "attention_low": 5.0 },
+    "types": {
+      "resonance": {
+        "label_ja": "共鳴",
+        "line": "集合意識の注目と占術の流れが、同じ方向を向いている配置です。"
+      },
+      "hidden": {
+        "label_ja": "隠れシンクロ",
+        "line": "集合意識の注目は薄いものの、占術の流れは強い一頭です。多くの人がまだ見過ごしている物語がここにあります。"
+      },
+      "heat": {
+        "label_ja": "過熱",
+        "line": "集合意識の注目が先行している配置です。占術の流れは控えめで、期待と流れの間に温度差があります。"
+      },
+      "quiet": {
+        "label_ja": "静観",
+        "line": "集合意識・占術ともに静かな配置です。一歩引いて全体を眺めたい組み合わせです。"
+      }
+    }
+  },
+  "score_bands": [
+    { "min": 9.0, "tier": "gold",   "label_ja": "かなり流れが噛み合う日" },
+    { "min": 8.0, "tier": "green",  "label_ja": "流れが噛み合いやすい日" },
+    { "min": 6.0, "tier": "blue",   "label_ja": "噛み合わせ次第の日" },
+    { "min": 4.0, "tier": "orange", "label_ja": "リズムの違いを楽しむ日" },
+    { "min": 0.0, "tier": "red",    "label_ja": "別々の流れの日" }
+  ],
+  "recommendation": {
+    "desc": "対象日の全出走組み合わせをシンクロ度降順に並べ、最上位を『今日のおすすめ』として提示する。優先タイブレーク: pattern=hidden > resonance > その他(物語性を優先)。同点はレース番号・馬番昇順。",
+    "framing_ja": "おすすめ=占術と集合意識の共鳴が強い組み合わせ。馬券購入の推奨ではなく、観戦の視点の提案である。"
+  }
+}

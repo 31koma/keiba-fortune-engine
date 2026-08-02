@@ -76,13 +76,23 @@ class ReadingService:
         pd = track(self.num.personal_day(pm, target.day))
         ud = track(self.num.universal_day(target))
 
+        def meanings(n: int) -> dict:
+            # 正本numerology_core.meanings(keywords/positive/negative)を添える。
+            # 完成文は生成しない(temporal_cycles.design_principle準拠)
+            m = self.kb.numerology["meanings"].get(str(n), {})
+            return {"keywords_ja": m.get("keywords_ja", []),
+                    "positive": m.get("positive"), "negative": m.get("negative")}
+
         parts = temporal.layered_parts(self.kb, py, pm, pd)
         result = {
             "entity_type": entity_type,
             "target_date": target.isoformat(),
-            "personal_year": {"value": py, **temporal.themes_for(self.kb, py)},
-            "personal_month": {"value": pm, **temporal.themes_for(self.kb, pm)},
-            "personal_day": {"value": pd, **temporal.themes_for(self.kb, pd)},
+            "personal_year": {"value": py, **temporal.themes_for(self.kb, py),
+                              "meanings": meanings(py)},
+            "personal_month": {"value": pm, **temporal.themes_for(self.kb, pm),
+                               "meanings": meanings(pm)},
+            "personal_day": {"value": pd, **temporal.themes_for(self.kb, pd),
+                             "meanings": meanings(pd)},
             "universal_day": {"value": ud,
                               "applies_to": "race_day",  # 正本applicability_matrix
                               **temporal.themes_for(self.kb, ud)},
@@ -90,6 +100,38 @@ class ReadingService:
             "used_rules": used_rules,
         }
         return result
+
+    # ---------- month calendar ----------
+    def month_calendar(self, entity_type: str, birth_date: date,
+                       year: int, month: int) -> dict:
+        """月の日ごとのパーソナルデー数字+テーマ(日別カレンダー用)。
+        正本period_roles.personal_day.use_forに「日別カレンダー」が定義済み。
+        テーマ語の列挙のみで吉凶の断定はしない(誠実原則)。"""
+        import calendar as _cal
+        used_rules: list[str] = []
+
+        def track(r: dict) -> int:
+            if r["rule"] not in used_rules:
+                used_rules.append(r["rule"])
+            return r["value"]
+
+        py = track(self.num.personal_year(birth_date, year))
+        pm = track(self.num.personal_month(py, month))
+        days = []
+        for d in range(1, _cal.monthrange(year, month)[1] + 1):
+            pd = track(self.num.personal_day(pm, d))
+            t = temporal.themes_for(self.kb, pd)
+            days.append({"date": date(year, month, d).isoformat(),
+                         "weekday": date(year, month, d).weekday(),
+                         "value": pd, "day_theme": t["day_theme"]})
+        return {
+            "entity_type": entity_type,
+            "year": year, "month": month,
+            "personal_year": {"value": py, **temporal.themes_for(self.kb, py)},
+            "personal_month": {"value": pm, **temporal.themes_for(self.kb, pm)},
+            "days": days,
+            "used_rules": used_rules,
+        }
 
     # ---------- triad ----------
     def horse_triad(self, horse: HorseDTO, jockey: JockeyDTO, race: RaceDTO,

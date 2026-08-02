@@ -21,6 +21,9 @@ def _load_builder():
     return mod.build_mock_kb
 
 
+# テストは常にMockプロバイダで実行(開発者の.env設定=jrdb等に影響されない)
+os.environ["KEIBA_DATA_PROVIDER"] = "mock"
+
 kb_dir = os.environ.get("KEIBA_KB_DIR")
 manifest = os.environ.get("KEIBA_MANIFEST_MD")
 if not (kb_dir and Path(kb_dir).is_dir() and manifest and Path(manifest).is_file()):

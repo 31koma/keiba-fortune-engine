@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import LogoutButton from "./components/LogoutButton";
 
 export const metadata: Metadata = {
   title: "星読みターフ — 星と数字で、レースを読む。",
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body>
+        <LogoutButton />
         {children}
       </body>
     </html>

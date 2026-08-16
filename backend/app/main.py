@@ -6,11 +6,12 @@
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.ai.gateway import AITextAssist
+from app.core import auth
 from app.core.config import settings
 from app.core.errors import (DegradedStateError, ForbiddenPhraseError,
                              KnowledgeGapError, KnowledgeValidationError)
@@ -74,12 +75,122 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# フロントエンド(Next.js開発サーバー)からのアクセス許可
+# フロントエンド(Next.js開発サーバー)からのアクセス許可。
+# 本番はNext.jsの /api リライト経由(同一オリジン)なのでCORSは使われない。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
+
+
+# ---------- ログイン認証 ----------
+# 認証を通さずに触れる道。ここ以外はすべてCookie必須(fail closed)。
+_PUBLIC_PATHS = {"/health", "/v1/auth/login", "/v1/auth/me", "/v1/auth/logout"}
+_throttle = auth.LoginThrottle()
+
+
+def _client_ip(request: Request) -> str:
+    # リバースプロキシ(Next.jsのrewrite等)の背後でも実IPを拾う
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _is_https(request: Request) -> bool:
+    """実際にHTTPSで届いたか。
+
+    Tailscale serve や Next.js のリライト配下ではアプリから見た scheme が http に
+    なるため、転送ヘッダを優先して見る。CookieのSecure属性の判定に使う。
+    """
+    proto = request.headers.get("x-forwarded-proto", "")
+    if proto:
+        return proto.split(",")[0].strip() == "https"
+    return request.url.scheme == "https"
+
+
+def _current_user(request: Request) -> str | None:
+    token = request.cookies.get(auth.COOKIE_NAME, "")
+    return auth.read_session(token, settings.auth_secret)
+
+
+@app.middleware("http")
+async def auth_gate(request: Request, call_next):
+    from fastapi.responses import JSONResponse
+
+    if not settings.auth_required or request.method == "OPTIONS":
+        return await call_next(request)
+    if request.url.path in _PUBLIC_PATHS:
+        return await call_next(request)
+
+    # 設定が未完了なら開放せず止める(公開状態で素通りさせない)
+    if not (settings.auth_email and settings.auth_password_hash and settings.auth_secret):
+        return JSONResponse(status_code=503, content={
+            "error": "auth_not_configured",
+            "detail": "ログインが未設定です。「パスワード設定.command」を実行してください。"})
+
+    if _current_user(request) is None:
+        return JSONResponse(status_code=401, content={"error": "unauthenticated"})
+    return await call_next(request)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/v1/auth/login", tags=["auth"])
+def post_login(req: LoginRequest, request: Request, response: Response):
+    if not (settings.auth_email and settings.auth_password_hash and settings.auth_secret):
+        raise HTTPException(status_code=503, detail={
+            "error": "auth_not_configured",
+            "detail": "ログインが未設定です。「パスワード設定.command」を実行してください。"})
+
+    ip = _client_ip(request)
+    remain = _throttle.locked_for(ip)
+    if remain:
+        raise HTTPException(status_code=429, detail={
+            "error": "too_many_attempts",
+            "detail": f"試行回数が多すぎます。{remain // 60 + 1}分ほど待ってからお試しください。"})
+
+    ok = (req.email.strip().lower() == settings.auth_email.strip().lower()
+          and auth.verify_password(req.password, settings.auth_password_hash))
+    if not ok:
+        _throttle.record_failure(ip)
+        # メールとパスワードのどちらが違うかは返さない(総当たりの手掛かりにさせない)
+        raise HTTPException(status_code=401, detail={
+            "error": "invalid_credentials",
+            "detail": "メールアドレスかパスワードが違います。"})
+
+    _throttle.record_success(ip)
+    ttl = settings.auth_session_days * 24 * 3600
+    response.set_cookie(
+        key=auth.COOKIE_NAME,
+        value=auth.issue_session(settings.auth_email, settings.auth_secret, ttl),
+        max_age=ttl, httponly=True, samesite="lax",
+        # httpsで来た時だけSecureを付ける(ローカルのhttpでも公開時のhttpsでも正しく動く)
+        secure=_is_https(request),
+        path="/")
+    return {"authenticated": True, "email": settings.auth_email}
+
+
+@app.post("/v1/auth/logout", tags=["auth"])
+def post_logout(response: Response):
+    response.delete_cookie(auth.COOKIE_NAME, path="/")
+    return {"authenticated": False}
+
+
+@app.get("/v1/auth/me", tags=["auth"])
+def get_me(request: Request):
+    if not settings.auth_required:
+        return {"authenticated": True, "email": None, "auth_required": False}
+    configured = bool(settings.auth_email and settings.auth_password_hash
+                      and settings.auth_secret)
+    user = _current_user(request) if configured else None
+    return {"authenticated": user is not None, "email": user,
+            "auth_required": True, "configured": configured}
 
 
 def get_service() -> ReadingService:
@@ -136,6 +247,12 @@ def health():
         },
         "active_data_provider": settings.data_provider,
         "forbidden_phrase_filter": ffilter.status if ffilter else "inactive",
+        "auth": {
+            "required": settings.auth_required,
+            # 設定できているか(メール・ハッシュ・署名鍵の3点)。値そのものは返さない
+            "configured": bool(settings.auth_email and settings.auth_password_hash
+                               and settings.auth_secret),
+        },
     }
 
 

@@ -36,6 +36,15 @@ class Settings(BaseSettings):
     jrdb_user: str = ""       # .envで設定(コミット禁止)
     jrdb_password: str = ""   # .envで設定(コミット禁止)
 
+    # --- ログイン認証(単一ユーザー。外部公開時の入口の鍵) ---
+    # 平文パスワードはここにも.envにも置かない。ハッシュだけを置く
+    # (生成は「パスワード設定.command」。詳細は app/core/auth.py)
+    auth_required: bool = True          # False にすると認証なしで開く(ローカル専用時のみ)
+    auth_email: str = ""                # ログインに使うメールアドレス
+    auth_password_hash: str = ""        # pbkdf2_sha256$回数$salt$hash
+    auth_secret: str = ""               # セッション署名鍵。変更すると全セッションが失効する
+    auth_session_days: int = 30         # ログインの保持日数(スマホで毎回入力しなくて済む長さ)
+
     # --- 禁止語フィルタ(語彙は正本から。ここはモードのみ) ---
     forbidden_filter_mode: Literal["reject", "redact", "regenerate"] = "reject"
 

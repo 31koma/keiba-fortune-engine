@@ -98,3 +98,40 @@ def parse_win_odds(odds_field: str, head_count: int) -> dict[int, float | None]:
     for i in range(min(head_count, LAYOUTS["OZ"]["odds_count"])):
         result[i + 1] = to_float(odds_field[i * item:(i + 1) * item])
     return result
+
+
+def parse_payouts(data: bytes) -> dict[str, dict]:
+    """HJC(払戻情報)をレースキー→式別→[(組番, 払戻金), ...] へ畳む。
+
+    JRDBは確定複勝配当・ワイド・三連複などの配当をSEDには入れないため、
+    回収率の検証にはこのファイルが要る(2026-08-16に導入)。
+    組番が全0のスロットは「該当なし」なので落とす。払戻金の単位は円(100円あたり)。
+    """
+    layout = LAYOUTS["HJC"]
+    rec_len = layout["record_len"]
+    out: dict[str, dict] = {}
+    pos = 0
+    while pos + rec_len <= len(data):
+        rec = data[pos:pos + rec_len]
+        pos += rec_len
+        if not rec.strip():
+            continue
+        key = slice_field(rec, 1, 8)
+        race: dict[str, list[tuple[str, int]]] = {}
+        for name, start, combo_len, pay_len, count in layout["payouts"]:
+            p = start
+            items: list[tuple[str, int]] = []
+            for _ in range(count):
+                combo = slice_field(rec, p, combo_len)
+                pay = to_int(slice_field(rec, p + combo_len, pay_len))
+                p += combo_len + pay_len
+                if combo and set(combo) != {"0"}:
+                    items.append((combo, pay or 0))
+            race[name] = items
+        out[key] = race
+    return out
+
+
+def combo_set(combo: str) -> frozenset[int]:
+    """組番文字列(例 '031014')を馬番の集合へ。順序のある式別には使わないこと。"""
+    return frozenset(int(combo[i:i + 2]) for i in range(0, len(combo), 2))

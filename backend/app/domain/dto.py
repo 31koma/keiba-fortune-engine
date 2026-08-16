@@ -35,6 +35,9 @@ class RaceEntryDTO(BaseModel):
     # 単勝オッズ(取得時点のスナップショット)。未取得はNone。
     # 占術エンジンでは「集合意識の注目度」の近似としてのみ扱う(結果予測ではない)
     win_odds: float | None = None
+    # 物理指数(JRDB IDM等)。表示・検証用であり占術スコアには一切混ぜない
+    # (スピ50%×物理50%は「並べて見せる」で実現する。合成は検証を通してから)
+    physical: dict | None = None
 
 
 class RaceDTO(BaseModel):

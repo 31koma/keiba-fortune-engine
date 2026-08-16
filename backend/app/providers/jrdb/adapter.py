@@ -98,6 +98,7 @@ class JRDBDataProvider(DataProviderSet):
             entries_by_race.setdefault(row["race_key"], []).append(row)
 
         # BAC: レース情報
+        day_entries: list[RaceEntryDTO] = []  # 理(IDM)の日内換算用
         for row in self._read("BAC", ymd):
             key = row["race_key"]
             rd = parser.to_date(row["yyyymmdd"])
@@ -111,9 +112,36 @@ class JRDBDataProvider(DataProviderSet):
                 win = odds.get(post) if post else None
                 if win is None:  # OZ欠損時はKYIの基準オッズへフォールバック
                     win = parser.to_float(e["base_win_odds"])
+                physical = {
+                    # 指数系は to_index_float(0と負値を保持)。to_float はオッズ専用
+                    "idm": parser.to_index_float(e.get("idm", "")),
+                    "jockey_idx": parser.to_index_float(e.get("jockey_idx", "")),
+                    "info_idx": parser.to_index_float(e.get("info_idx", "")),
+                    "total_idx": parser.to_index_float(e.get("total_idx", "")),
+                    "cyokyo_idx": parser.to_index_float(e.get("cyokyo_idx", "")),
+                    "kyusha_idx": parser.to_index_float(e.get("kyusha_idx", "")),
+                    "base_place_odds": parser.to_float(e.get("base_place_odds", "")),
+                    # 後段でレース内順位(*_rank)と日内10点換算(*10)を付与
+                    "idm_rank": None, "idm10": None,
+                    "cyokyo_rank": None, "cyokyo10": None,
+                    "joc_rank": None, "joc10": None,
+                    # 前日基準人気帯と p表v4 のセル(後段で日単位に付与)
+                    "pop_rank": parser.to_int(e.get("base_win_rank", "")),
+                    "pop_band": None, "joc_split": None, "cyo_split": None,
+                    "v4_cell": None, "p_v4": None,
+                }
                 entries.append(RaceEntryDTO(
                     horse_id=e["pedigree_id"], jockey_id=e["jockey_code"],
-                    post_number=post, win_odds=win))
+                    post_number=post, win_odds=win, physical=physical))
+            # 物理指数のレース内順位(降順)。表示用であり占術スコアには使わない
+            for fld, rkey in (("idm", "idm_rank"), ("cyokyo_idx", "cyokyo_rank"),
+                              ("jockey_idx", "joc_rank")):
+                ranked = sorted([en for en in entries
+                                 if en.physical and en.physical[fld] is not None],
+                                key=lambda en: -en.physical[fld])
+                for i, en in enumerate(ranked):
+                    en.physical[rkey] = i + 1
+            day_entries.extend(entries)
             surface = TRACK_CODES.get(row["track_code"], "unknown")
             hhmm = row["start_hhmm"]
             start = f"{hhmm[:2]}:{hhmm[2:]}" if len(hhmm) == 4 and hhmm.isdigit() else None
@@ -125,6 +153,72 @@ class JRDBDataProvider(DataProviderSet):
                 distance=parser.to_int(row["distance"]) or 0,
                 surface=surface, race_class=GRADE_CODES.get(row["grade_code"]),
                 entries=entries, source_provider="jrdb", retrieved_at=now)
+
+        # 物理指数の日内10点換算: この日の最高=10.0・最低=0.0(小数1桁)。
+        # 占術スコア(主/客/本/数/収)と同じ10点満点に揃える表示用スケール。
+        # (調教指数など負値を持つ指数があるため、比率でなくmin-maxで統一する)
+        for fld, key10 in (("idm", "idm10"), ("cyokyo_idx", "cyokyo10"),
+                           ("jockey_idx", "joc10")):
+            vals = [en.physical[fld] for en in day_entries
+                    if en.physical and en.physical[fld] is not None]
+            if not vals:
+                continue
+            lo, hi = min(vals), max(vals)
+            span = hi - lo
+            for en in day_entries:
+                if en.physical and en.physical[fld] is not None and span > 0:
+                    en.physical[key10] = round((en.physical[fld] - lo) / span * 10, 1)
+
+        self._apply_p_table_v4(day_entries)
+
+    # p表v4(2026-08-15発行)。11開催日プール n=5125(0711-0815)の実測複勝率。
+    # 帯=前日基準人気(KYI 101,2)。分割=**その日・その人気帯の中での**騎手指数/調教指数
+    # 中央値分割(降順の上位ceil(n/2)=high)。
+    # レース内順位での分割は人気とほぼ同義になり効果が消えることを実測済みのため、
+    # 必ず「日 × 人気帯」で切ること(定義を変えるとこの表は使えない)。
+    # 日別の再現性: 騎↑調↑が帯ベースラインを上回った開催日は 1-3:11/11 / 4-6:9/11 / 7+:11/11。
+    P_TABLE_V4: dict[str, dict[str, float]] = {
+        "1-3": {"high/high": 0.624, "high/low": 0.530,
+                "low/high": 0.481, "low/low": 0.404},
+        "4-6": {"high/high": 0.347, "high/low": 0.262,
+                "low/high": 0.244, "low/low": 0.192},
+        "7+":  {"high/high": 0.163, "high/low": 0.072,
+                "low/high": 0.099, "low/low": 0.033},
+    }
+
+    @classmethod
+    def _apply_p_table_v4(cls, day_entries: list[RaceEntryDTO]) -> None:
+        """その日の全出走馬に 人気帯 × 騎調セル と 複勝率p(v4)を付与する。"""
+        for en in day_entries:
+            if not en.physical:
+                continue
+            rank = en.physical.get("pop_rank")
+            en.physical["pop_band"] = (
+                None if not rank else
+                "1-3" if rank <= 3 else "4-6" if rank <= 6 else "7+")
+
+        for band in ("1-3", "4-6", "7+"):
+            members = [en for en in day_entries
+                       if en.physical and en.physical["pop_band"] == band]
+            for fld, key in (("jockey_idx", "joc_split"),
+                             ("cyokyo_idx", "cyo_split")):
+                have = sorted([en for en in members
+                               if en.physical[fld] is not None],
+                              key=lambda en: -en.physical[fld])
+                cut = -(-len(have) // 2)  # ceil(n/2)
+                for i, en in enumerate(have):
+                    en.physical[key] = "high" if i < cut else "low"
+
+        for en in day_entries:
+            if not en.physical:
+                continue
+            js, cs = en.physical["joc_split"], en.physical["cyo_split"]
+            band = en.physical["pop_band"]
+            if not (js and cs and band):
+                continue
+            cell = f"{js}/{cs}"
+            en.physical["v4_cell"] = cell
+            en.physical["p_v4"] = cls.P_TABLE_V4[band][cell]
 
     def _load_results(self) -> None:
         """ZED(前走データ)全ファイルから馬ごとの着順履歴を集約する。

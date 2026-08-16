@@ -89,6 +89,7 @@ class RecommendService:
                     "jockey_id": jockey.internal_id,
                     "jockey_name": jockey.name,
                     "win_odds": entry.win_odds,
+                    "physical": getattr(entry, "physical", None),
                     "synchro": sync,
                     "pattern_numerology": {
                         "score": pn.score, "label": pn.label, "signals": pn.signals,

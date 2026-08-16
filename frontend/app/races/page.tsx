@@ -3,66 +3,21 @@ import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import HorseDetailSheet from "../components/HorseDetailSheet";
+import RaceBoard from "../components/RaceBoard";
 import PageNav from "../components/PageNav";
 import { MOCK_RACES } from "@/lib/mock";
 import { dayTheme, lifePath, sunSign } from "@/lib/preview";
 import { computeSynchro } from "@/lib/synchro";
 import {
-  ApiDayRecommendations, ApiRecoItem, fetchDayRecommendations,
-  groupByRace, WAKU_STYLE, wakuOf,
+  ApiDayRecommendations, ApiRecoItem, fetchDayRecommendations, groupByRace,
 } from "@/lib/api";
 import { bandFor, MODES, recompute } from "@/lib/synchroModes";
 import { fiftyOf, topByFifty } from "@/lib/fifty";
 import { birthdateEnabled, effectiveBirth } from "@/lib/settings";
 
-/** 合バッジ(馬行の右上・レース一覧の右)。合の定義と根拠は lib/fifty.ts */
-function FiftyBadge({ it }: { it: ApiRecoItem }) {
-  const f = fiftyOf(it);
-  if (f == null) return null;
-  return (
-    <span className={`ih-sync sync-inline-${bandFor(f).tier}`}>合{f.toFixed(1)}</span>
-  );
-}
-
-/** 一覧の4指標セル */
-function Metric({ k, v, tier, digits = 1 }: {
-  k: string; v: number | null; tier: string | null; digits?: number;
-}) {
-  return (
-    <span className="metric">
-      <span className="metric-key">{k}</span>
-      <span className={`metric-val ${tier ? `sync-inline-${tier}` : "metric-none"}`}>
-        {v === null ? "—" : v.toFixed(digits)}
-      </span>
-    </span>
-  );
-}
-
-function MetricStrip({ it }: { it: ApiRecoItem }) {
-  const s = it.synchro;
-  const kyak = recompute(s.components, MODES.quad.include);
-  const hon = recompute(s.components, MODES.market_compare.include);
-  const pn = it.pattern_numerology;
-  const pnOk = pn && !pn.insufficient;
-  const oshi = it.oshi;
-  const ph = it.physical;
-  return (
-    <span className="metric-strip">
-      <Metric k="主" v={s.score} tier={s.tier} />
-      <Metric k="客" v={kyak.score} tier={kyak.tier} />
-      <Metric k="本" v={hon.score} tier={hon.tier} />
-      <Metric k="数" v={pnOk ? pn.score : null}
-        tier={pnOk ? bandFor(pn.score).tier : null} />
-      <Metric k="収" v={oshi ? oshi.score : null} tier={oshi ? oshi.tier : null} />
-      <Metric k="理" v={ph?.idm10 ?? null}
-        tier={ph?.idm10 != null ? bandFor(ph.idm10).tier : null} />
-      <Metric k="調" v={ph?.cyokyo10 ?? null}
-        tier={ph?.cyokyo10 != null ? bandFor(ph.cyokyo10).tier : null} />
-      <Metric k="騎" v={ph?.joc10 ?? null}
-        tier={ph?.joc10 != null ? bandFor(ph.joc10).tier : null} />
-    </span>
-  );
-}
+// 一覧に出す数字は「合」と、その材料の 収・理・調・騎 の4つだけ(RaceBoard)。
+// 主・客・本・数は選定に使っていないので詳細シート(HorseDetailSheet)へ送った。
+// 2026-08-16 オーナー指定「いまの見方はややこしい」。数字を減らすこと自体が改善。
 
 // ---------- WIN5(各レース3頭・客観シンクロ度順) ----------
 // 対象の推定: JRAは原則「後半5レース」(通常3場開催は10R/11R帯、最終Rは対象外)。
@@ -155,18 +110,7 @@ const FOOTER = (
   </footer>
 );
 
-function Waku({ post, headCount }: { post: number | null; headCount: number }) {
-  if (!post) return null;
-  const st = WAKU_STYLE[wakuOf(post, headCount)];
-  return (
-    <span className="waku-box" style={{
-      background: st.bg, color: st.fg,
-      border: st.border ? `1px solid ${st.border}` : "1px solid transparent",
-    }}>{post}</span>
-  );
-}
-
-// ---------- 実データ: 場 → レース → 馬 ----------
+// ---------- 実データ: 出馬表ボード(場タブ → Rタブ → 表) ----------
 function ApiRaces({ api, hasBirth, userOff, initRace, initHorse }: {
   api: ApiDayRecommendations;
   hasBirth: boolean;
@@ -182,117 +126,11 @@ function ApiRaces({ api, hasBirth, userOff, initRace, initHorse }: {
       : null,
     [api.items, initRace, initHorse]);
 
-  const [course, setCourse] = useState<string | null>(initItem?.racecourse ?? null);
-  const [raceId, setRaceId] = useState<string | null>(initItem?.race_id ?? null);
   const [detail, setDetail] = useState<ApiRecoItem | null>(initItem);
+  const [jumpTo, setJumpTo] = useState<string | null>(initItem?.race_id ?? null);
 
-  const courses = useMemo(() => {
-    const m = new Map<string, number>();
-    groups.forEach((g) => m.set(g.racecourse, (m.get(g.racecourse) ?? 0) + 1));
-    return Array.from(m.entries());
-  }, [groups]);
-  const courseGroups = groups.filter((g) => g.racecourse === course);
-  const race = groups.find((g) => g.race_id === raceId) ?? null;
+  const dayFifty = dayPick ? fiftyOf(dayPick) : null;
 
-  const sheet = detail && (
-    <HorseDetailSheet item={detail} hasBirth={hasBirth} userOff={userOff}
-      onClose={() => setDetail(null)} />
-  );
-
-  // --- 馬一覧(レース選択済み) ---
-  if (race) {
-    const topId = topByFifty(race.items)?.horse_id; // ✦=合(50/50総合)トップ
-    const byPost = race.items.slice().sort((a, b) => (a.post_number ?? 0) - (b.post_number ?? 0));
-    return (
-      <>
-        <PageNav onBack={() => setRaceId(null)} />
-        <div className="race-head" style={{ marginTop: 14 }}>
-          <span className="race-title">
-            {race.race_name && race.race_name !== "レース" ? race.race_name : `${race.racecourse}${race.race_number}R`}
-          </span>
-          <span className="race-meta">
-            {api.target_date}・{race.racecourse}{race.race_number}R
-            {byPost[0]?.start_time ? `・${byPost[0].start_time}発走` : ""}
-            ・{byPost[0]?.head_count}頭
-          </span>
-        </div>
-        <p className="ipat-hint">✦=このレースの「合」トップ(合=スピ50%×物理50%)。馬をタップすると詳細が開きます</p>
-        <p className="ipat-hint" style={{ fontWeight: 700 }}>
-          見方: まず「合」。あとは濃い色を数える(1〜3番人気は点差を見ない)。「収」と「理」が両方濃い馬がねらい目。
-        </p>
-        {byPost.map((it) => {
-          const featured = it.horse_id === topId;
-          return (
-            <button key={it.horse_id} className={`ipat-horse ih-col ${featured ? "featured" : ""}`}
-              onClick={() => setDetail(it)}>
-              <span className="ih-top">
-                <Waku post={it.post_number} headCount={it.head_count} />
-                <span className="ih-main">
-                  <span className="ih-name">
-                    {featured && <span className="ih-star">✦ </span>}{it.horse_name}
-                  </span>
-                  <span className="ih-sub">{it.jockey_name}</span>
-                </span>
-                <FiftyBadge it={it} />
-                <span className="ih-odds">{it.win_odds ? `単${it.win_odds}` : ""}</span>
-              </span>
-              <MetricStrip it={it} />
-            </button>
-          );
-        })}
-        <p className="ipat-hint">
-          合=スピ(収)50%×物理(理・調・騎の平均)50%の総合点。おすすめ・✦・レース一覧の数字はこの点で選ぶ /
-          主=あなたを含めた総合評価 / 客=あなたを除いた客観評価 /
-          本=馬・騎手・レース日の本質評価 / 数=戦績の流れと波形を読む数理評価 /
-          収=星と戦績が同じ方向を向いたときの最終評価(収束・オッズ不使用) /
-          理=能力(JRDB IDM) / 調=仕上がり(調教指数) / 騎=鞍上の腕(騎手指数)。
-          物理3指標は星と同じ10点満点(本日の最高=10・最低=0)。星と混ぜず並べて見る。
-          色は全指標共通で点の高さ: 金=9以上 / 緑=8台 / 青=6〜7台 / 橙=4〜5台 / 赤=4未満
-        </p>
-        {FOOTER}
-        {sheet}
-      </>
-    );
-  }
-
-  // --- レース一覧(場選択済み) ---
-  if (course) {
-    return (
-      <>
-        <PageNav onBack={() => setCourse(null)} />
-        <div className="race-head" style={{ marginTop: 14 }}>
-          <span className="race-title">{course}</span>
-          <span className="race-meta">{api.target_date}・{courseGroups.length}レース</span>
-        </div>
-        {courseGroups.map((g) => {
-          const top = g.items[0];
-          const pick = topByFifty(g.items);
-          const pf = pick ? fiftyOf(pick) : null;
-          const hasHidden = g.items.some((it) => it.oshi?.hidden);
-          return (
-            <button key={g.race_id} className="ipat-race" onClick={() => setRaceId(g.race_id)}>
-              <span className="ir-no">{g.race_number}R</span>
-              <span className="ir-name">
-                {hasHidden && <span className="ih-star">✦ </span>}
-                {g.race_name && g.race_name !== "レース" ? g.race_name : ""}
-              </span>
-              <span className="ir-right">
-                {pf != null
-                  ? <span className={`ih-sync sync-inline-${bandFor(pf).tier}`}>{pf.toFixed(1)}</span>
-                  : top && <span className={`ih-sync sync-inline-${top.synchro.tier}`}>{top.synchro.score.toFixed(1)}</span>}
-                <span className="ir-time">{top?.start_time ?? ""}</span>
-              </span>
-            </button>
-          );
-        })}
-        <p className="ipat-hint">右の数字は各レースの推しトップの「合」(スピ50%×物理50%)。✦=隠れ推しがいるレース</p>
-        {FOOTER}
-        {sheet}
-      </>
-    );
-  }
-
-  // --- 場一覧 ---
   return (
     <>
       <PageNav />
@@ -307,32 +145,32 @@ function ApiRaces({ api, hasBirth, userOff, initRace, initHorse }: {
               : "生年月日を登録すると、あなたを加えた値になります。"}
         </p>
       </section>
-      {dayPick && (
+
+      {dayPick && dayFifty != null && (
         <button className="ipat-reco" onClick={() => {
-          setCourse(dayPick.racecourse);
-          setRaceId(dayPick.race_id);
+          setJumpTo(dayPick.race_id);
           setDetail(dayPick);
         }}>
           ✦ この日のおすすめ: {dayPick.racecourse}{dayPick.race_number}R
           {" "}{dayPick.horse_name}
-          <span className={`ih-sync sync-inline-${bandFor(fiftyOf(dayPick)!).tier}`}>
-            合{fiftyOf(dayPick)!.toFixed(1)}
+          <span className={`ih-sync sync-inline-${bandFor(dayFifty).tier}`}>
+            合{dayFifty.toFixed(1)}
           </span>
         </button>
       )}
-      {courses.map(([name, count]) => (
-        <button key={name} className="ipat-course" onClick={() => setCourse(name)}>
-          <span>{name}</span>
-          <span className="ic-meta">{count}レース ›</span>
-        </button>
-      ))}
+
+      <RaceBoard groups={groups} targetDate={api.target_date}
+        initRaceId={jumpTo} onPick={setDetail} />
+
       <Win5Section groups={groups} onPick={(it) => {
-        setCourse(it.racecourse);
-        setRaceId(it.race_id);
+        setJumpTo(it.race_id);
         setDetail(it);
       }} />
       {FOOTER}
-      {sheet}
+      {detail && (
+        <HorseDetailSheet item={detail} hasBirth={hasBirth} userOff={userOff}
+          onClose={() => setDetail(null)} />
+      )}
     </>
   );
 }

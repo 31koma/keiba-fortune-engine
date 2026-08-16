@@ -22,6 +22,61 @@ const SURFACE: Record<string, string> = { turf: "芝", dirt: "ダ", jump: "障" 
 // 突き合わせると、1→4の順で相対位置が 0.286 / 0.390 / 0.540 / 0.697 と単調に後ろへ下がる。
 const KYAKU: Record<number, string> = { 1: "逃", 2: "先", 3: "差", 4: "追" };
 
+
+// 列見出しの説明(カーソルを乗せる/タップすると出る)。
+// 2026-08-16 オーナー「合 収 理 調 騎 脚 想 激 これよくわからん。カーソル持っていったら説明で」。
+// 数字を出すなら何を数えたかを添える、という編集規範に従い、実測値もここに書く。
+const TIPS: Record<string, { title: string; body: string }> = {
+  waku: { title: "枠", body: "JRAの枠番。8枠まで。多頭数のレースでは大きい枠に複数頭が入ります。" },
+  no: { title: "馬番", body: "ゲートの番号。左(内)から順に1番。" },
+  nm: { title: "馬名 / 騎手", body: "上が馬名、下が鞍上。行をタップすると、その馬の詳しい鑑定が開きます。" },
+  fifty: {
+    title: "合 — 50/50総合",
+    body: "スピ(収)50% × 物理(理・調・騎の平均)50%。おすすめと✦はこの点で選んでいます。"
+      + "迷ったら、まずこの数字がいちばん濃い馬。",
+  },
+  oshi: {
+    title: "収 — 収束度",
+    body: "星と戦績が同じ方向を向いたときの最終評価。オッズを使っていないので、"
+      + "市場と別のことを言えます。高いグループが走りやすい数字であって、1頭を当てる数字ではありません。",
+  },
+  idm: { title: "理 — 能力", body: "馬の実力(JRDBのIDM)。その日の最高=10・最低=0で10点満点に換算しています。" },
+  cyokyo: { title: "調 — 仕上がり", body: "調教の良さ(調教指数)。同じくその日の中で10点満点に換算。" },
+  joc: { title: "騎 — 騎手", body: "鞍上の腕(騎手指数)。同じくその日の中で10点満点に換算。" },
+  kyaku: {
+    title: "脚 — 脚質",
+    body: "どこを走るつもりの馬か。逃=先頭 / 先=前め / 差=中団から / 追=後方から。"
+      + "JRDBの想定です(8/16の実際のコーナー通過順と突き合わせて向きを確認済み)。",
+  },
+  goal: {
+    title: "想 — 想定ゴール順位",
+    body: "JRDBが予想している着順。1位は金色にしています。"
+      + "12開催日5612頭の実測では、想定1位の馬は勝26.6%・複54.3%(全馬は勝7.7%・複22.9%)。",
+  },
+  gekiso: {
+    title: "激 — 激走指数",
+    body: "一発がありそうかの目安。12開催日の実測では、200以上で勝13.8%、100未満で勝4.1%。",
+  },
+  odds: { title: "単勝", body: "前日時点の単勝オッズ。当日のオッズではありません。" },
+  pop: { title: "人気", body: "前日基準の人気順。1〜3番人気には色を敷いています。" },
+};
+
+/** 見出しセル。カーソルを乗せる(スマホはタップ)と説明が出る */
+function Th({ k, label, cls }: { k: string; label: string; cls: string }) {
+  const t = TIPS[k];
+  return (
+    <th className={cls}>
+      <button type="button" className="rb-h">
+        {label}
+        <span className="rb-tip" role="tooltip">
+          <b>{t.title}</b>
+          {t.body}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 function Waku({ post, headCount }: { post: number | null; headCount: number }) {
   if (!post) return <td className="rb-waku" />;
   const st = WAKU_STYLE[wakuOf(post, headCount)];
@@ -122,19 +177,19 @@ export default function RaceBoard({ groups, targetDate, onPick, initRaceId }: {
         <table className="rb-table">
           <thead>
             <tr>
-              <th className="rb-waku">枠</th>
-              <th className="rb-no">馬番</th>
-              <th className="rb-nm">馬名 / 騎手</th>
-              <th className="rb-fifty">合</th>
-              <th className="rb-m">収</th>
-              <th className="rb-m">理</th>
-              <th className="rb-m">調</th>
-              <th className="rb-m">騎</th>
-              <th className="rb-m rb-ext" title="脚質(JRDB)">脚</th>
-              <th className="rb-m rb-ext" title="JRDBの想定ゴール順位">想</th>
-              <th className="rb-m rb-ext" title="激走指数(JRDB)">激</th>
-              <th className="rb-odds">単勝</th>
-              <th className="rb-pop">人気</th>
+              <Th k="waku" label="枠" cls="rb-waku" />
+              <Th k="no" label="馬番" cls="rb-no" />
+              <Th k="nm" label="馬名 / 騎手" cls="rb-nm" />
+              <Th k="fifty" label="合" cls="rb-fifty" />
+              <Th k="oshi" label="収" cls="rb-m" />
+              <Th k="idm" label="理" cls="rb-m" />
+              <Th k="cyokyo" label="調" cls="rb-m" />
+              <Th k="joc" label="騎" cls="rb-m" />
+              <Th k="kyaku" label="脚" cls="rb-m rb-ext" />
+              <Th k="goal" label="想" cls="rb-m rb-ext" />
+              <Th k="gekiso" label="激" cls="rb-m rb-ext" />
+              <Th k="odds" label="単勝" cls="rb-odds" />
+              <Th k="pop" label="人気" cls="rb-pop" />
             </tr>
           </thead>
           <tbody>
@@ -185,14 +240,10 @@ export default function RaceBoard({ groups, targetDate, onPick, initRaceId }: {
       </div>
 
       <p className="rb-legend">
-        <b>✦</b>=このレースの「合」トップ。<b>合</b>=スピ(収)50%×物理(理・調・騎)50%。
-        馬をタップすると、主・客・本・数や展開・適性を含めた詳細が開きます。
-        色は点の高さ: 金9以上 / 緑8台 / 青6〜7台 / 橙4〜5台 / 赤4未満。人気は前日基準人気。
-        <br />
-        <b>脚</b>=脚質(逃・先・差・追) / <b>想</b>=JRDBの想定ゴール順位 /
-        <b>激</b>=激走指数。この3つは「合」には入れていない参考値です。
-        12開催日5612頭の実測では、想定ゴール1位の馬は勝26.6%・複54.3%(全馬は7.7%・22.9%)、
-        激走指数は200以上で勝13.8%・100未満で勝4.1%でした。
+        <b>✦</b>=このレースの「合」トップ(その行は金色)。<b>金の点</b>のついたRタブ=隠れ推しがいるレース。
+        <b>見出しにカーソルを乗せる</b>(スマホはタップ)と、その列の説明が出ます。
+        色は点の高さ: 金9以上 / 緑8台 / 青6〜7台 / 橙4〜5台 / 赤4未満。
+        脚・想・激は参考値で、「合」の式には入れていません。
       </p>
     </div>
   );

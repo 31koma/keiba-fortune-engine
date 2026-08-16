@@ -7,6 +7,8 @@ import GuideCard from "./components/GuideCard";
 import { lifePath, sunSign } from "@/lib/preview";
 import { dayRecommendations, SYNC_FRAMING } from "@/lib/synchro";
 import { ApiDayRecommendations, fetchDayRecommendations } from "@/lib/api";
+import { bandFor } from "@/lib/synchroModes";
+import { fiftyOf, topByFifty } from "@/lib/fifty";
 import { birthdateEnabled, effectiveBirth, setBirthdateEnabled } from "@/lib/settings";
 
 function TodayRecommendation({ birth }: { birth: string | null }) {
@@ -17,12 +19,17 @@ function TodayRecommendation({ birth }: { birth: string | null }) {
   }, [birth]);
 
   // ---- 実データ(バックエンドAPI) ----
-  if (api?.recommendation) {
-    const r = api.recommendation;
+  // おすすめ=「合」(スピ50%×物理50%)のトップ。lib/fifty.ts 参照(2026-08-09 オーナー決定)
+  const pick = api && api.items.length > 0
+    ? (topByFifty(api.items) ?? api.recommendation) : api?.recommendation ?? null;
+  if (api && pick) {
+    const r = pick;
     const s = r.synchro;
-    const o = r.oshi ?? null;  // 旧バックエンド互換(無ければシンクロ度表示)
+    const o = r.oshi ?? null;
+    const f = fiftyOf(r);
+    const tier = f != null ? bandFor(f).tier : (o ?? s).tier;
     return (
-      <section className={`reco-card sync-${(o ?? s).tier}`}>
+      <section className={`reco-card sync-${tier}`}>
         <div className="reco-head">
           <span className="reco-tag">✦ {api.target_date} のおすすめ</span>
           <span className="reco-race">
@@ -41,15 +48,15 @@ function TodayRecommendation({ birth }: { birth: string | null }) {
           </div>
           <div className="reco-score">
             <span className="sync-score" style={{ fontSize: 34 }}>
-              {(o ?? s).score.toFixed(1)}<span className="sync-max" style={{ fontSize: 13 }}> /10</span>
+              {(f ?? (o ?? s).score).toFixed(1)}<span className="sync-max" style={{ fontSize: 13 }}> /10</span>
             </span>
-            <span className="reco-score-key">{o ? "収束度" : "シンクロ度"}</span>
+            <span className="reco-score-key">{f != null ? "合(スピ50×物理50)" : o ? "収束度" : "シンクロ度"}</span>
           </div>
         </div>
         <div className={`pattern-chip pattern-${s.pattern.type}`}>{s.pattern.label_ja}</div>
         <p className="pattern-line">{o?.reasons[0]?.line ?? s.pattern.line}</p>
         <Link className="reco-btn" href={`/races?race=${r.race_id}&horse=${r.horse_id}`}>
-          この馬の詳細を見る(主/客/本/数/収)
+          この馬の詳細を見る(合/主/客/本/数/収/理/調/騎)
         </Link>
         <p className="reco-note">{api.framing}({api.provider_credit.data_provider_credit})</p>
       </section>
@@ -164,7 +171,9 @@ export default function Home() {
         <p>
           数秘術と西洋占星術——2000年続く「読み」の伝統をレンズに、
           競走馬・騎手・レース日・あなたの4者の関係性を分析します。
-          当てるためではなく、いつもの競馬をもっと深く味わうために。
+          さらにJRDBの実測データ(能力・仕上がり・騎手)を重ね、
+          スピ50%×物理50%の「合」で今日の一頭を選びます。
+          結果を保証するためではなく、いつもの競馬をもっと深く味わうために。
         </p>
         <div className="terms">
           <span className="term"><b>ライフパス</b>(生まれ持った数)</span>
@@ -192,7 +201,7 @@ export default function Home() {
         <br />
         的中・必勝をうたうサービスではなく、馬券の購入を推奨するものでもありません。
         <br />
-        開発版 / Mockデータ表示中 / 知識ベース v1.2 準拠
+        知識ベース v1.3 準拠 / JRDB実データ / 週末ごとの検証(run1〜10)を継続中
       </footer>
 
       {modal && (

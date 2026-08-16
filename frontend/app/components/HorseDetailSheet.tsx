@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ApiRecoItem, WAKU_STYLE, wakuOf } from "@/lib/api";
 import { bandFor, marketComparison, MODES, ModeResult, recompute } from "@/lib/synchroModes";
+import { fiftyOf } from "@/lib/fifty";
 
 const SUUHI_SIGNALS: [string, string][] = [
   ["phase", "位相(流れの向き)"],
@@ -97,10 +98,45 @@ export default function HorseDetailSheet({ item, hasBirth, userOff = false, onCl
             </div>
             <div className="detail-sub">
               鞍上 {item.jockey_name}{item.win_odds ? `・単勝${item.win_odds}` : ""}
+              {item.physical?.idm10 != null &&
+                `・理 ${item.physical.idm10.toFixed(1)}${item.physical.idm_rank ? `(レース${item.physical.idm_rank}位)` : ""}`}
+              {item.physical?.cyokyo10 != null && `・調 ${item.physical.cyokyo10.toFixed(1)}`}
+              {item.physical?.joc10 != null && `・騎 ${item.physical.joc10.toFixed(1)}`}
             </div>
           </div>
           <button className="detail-close" onClick={onClose} aria-label="閉じる">✕</button>
         </div>
+
+        {/* 合と物理3指標 — どのタブでも常に見える(2026-08-09 オーナー要望) */}
+        {(() => {
+          const f = fiftyOf(item);
+          const ph = item.physical;
+          if (f == null && !ph) return null;
+          const rows: [string, number | null, string | null][] = [
+            ["合(スピ50×物理50)", f, null],
+            ["理(能力)", ph?.idm10 ?? null,
+              ph?.idm_rank ? `レース${ph.idm_rank}位` : null],
+            ["調(仕上がり)", ph?.cyokyo10 ?? null,
+              ph?.cyokyo_rank ? `レース${ph.cyokyo_rank}位` : null],
+            ["騎(騎手)", ph?.joc10 ?? null,
+              ph?.joc_rank ? `レース${ph.joc_rank}位` : null],
+          ];
+          return (
+            <div style={{ margin: "10px 0 4px" }}>
+              {rows.map(([label, v, sub]) => (
+                <div className="comp-row" key={label}>
+                  <span className="comp-label">{label}{sub ? ` ${sub}` : ""}</span>
+                  <span className="comp-bar">
+                    <span style={{ width: `${(v ?? 0) * 10}%` }} />
+                  </span>
+                  <span className={`comp-val ${v != null ? `sync-inline-${bandFor(v).tier}` : ""}`}>
+                    {v == null ? "—" : v.toFixed(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         <div className="tabs">
           {(Object.keys(MODES) as ModeKey[]).map((k) => (
@@ -181,7 +217,7 @@ export default function HorseDetailSheet({ item, hasBirth, userOff = false, onCl
                     : item.oshi.confidence === "medium"
                       ? "。走歴がやや少ないため、調律は中立へ寄せた値です"
                       : ""}。
-                  検証前の仮説指標であり、レース結果の予測や馬券購入の推奨ではありません。
+                  週末ごとの検証を継続している仮説指標であり、レース結果の予測や馬券購入の推奨ではありません。
                 </p>
               </>
             )}
@@ -220,7 +256,7 @@ export default function HorseDetailSheet({ item, hasBirth, userOff = false, onCl
                   ・信頼度{Math.round(pn.confidence * 100)}%)。
                   理想は5走。走歴が少ない場合は読める信号だけで解析し、
                   信頼度に応じて中立へ寄せた控えめな値にしています。
-                  オッズ・人気は使用していません。検証前の仮説指標であり、
+                  オッズ・人気は使用していません。検証を継続している仮説指標であり、
                   レース結果の予測ではありません。
                 </p>
               </>

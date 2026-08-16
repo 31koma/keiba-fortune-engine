@@ -415,11 +415,16 @@ footer { margin-top: 44px; border-top: 1px solid var(--line); padding-top: 18px;
 .reco-note { margin-top: 12px; font-size: 10.5px; color: var(--ink-dim);
   line-height: 1.8; font-family: "Hiragino Sans", sans-serif; }
 
-/* シンクロ度ミニ表示(レース一覧) */
-.sync-inline-gold { color: #d8b876; }
+/* シンクロ度ミニ表示(レース一覧)
+   金は9点以上の別格なので、明るい黄金+微光で橙(4-5台)と峻別する */
+.sync-inline-gold {
+  color: #f6d97e;
+  text-shadow: 0 0 8px rgba(246, 217, 126, 0.55);
+  font-weight: 600;
+}
 .sync-inline-green { color: #8fc9a0; }
 .sync-inline-blue { color: #9cc0e8; }
-.sync-inline-orange { color: #e0b083; }
+.sync-inline-orange { color: #cf8a55; }
 .sync-inline-red { color: #dd9a9a; }
 
 /* ---- 戻りナビ ---- */

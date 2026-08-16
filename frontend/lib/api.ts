@@ -1,7 +1,8 @@
 // バックエンドAPI(FastAPI)クライアント。
 // API不達時はnullを返し、呼び出し側がMock表示へフォールバックする。
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+// 既定は同一オリジンの中継(/api → next.config.mjs の rewrites → FastAPI)。
+// 同一オリジンにすることでログインCookieがそのまま効く。
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "/api";
 
 export type ApiPattern = {
   type: "resonance" | "hidden" | "heat" | "quiet";
@@ -58,6 +59,32 @@ export type ApiOshi = {
   framing: string;
 };
 
+/** JRDB物理指数(IDM等)。表示・検証用。占術スコアには混ぜない(スピ50×物理50は並列表示) */
+export type ApiPhysical = {
+  idm: number | null;
+  jockey_idx: number | null;
+  info_idx: number | null;
+  total_idx: number | null;
+  cyokyo_idx?: number | null;
+  kyusha_idx?: number | null;
+  base_place_odds: number | null;
+  // *_rank=レース内順位 / *10=日内10点換算(本日最高=10.0・最低=0.0)
+  idm_rank: number | null;
+  idm10?: number | null;
+  cyokyo_rank?: number | null;
+  cyokyo10?: number | null;
+  joc_rank?: number | null;
+  joc10?: number | null;
+  // p表v4(2026-08-15発行・11開催日 n=5125)。帯=前日基準人気、
+  // 分割=日×人気帯の中での騎手指数/調教指数の中央値分割。
+  pop_rank?: number | null;
+  pop_band?: "1-3" | "4-6" | "7+" | null;
+  joc_split?: "high" | "low" | null;
+  cyo_split?: "high" | "low" | null;
+  v4_cell?: "high/high" | "high/low" | "low/high" | "low/low" | null;
+  p_v4?: number | null;
+};
+
 export type ApiRecoItem = {
   race_id: string;
   race_name: string;
@@ -73,6 +100,7 @@ export type ApiRecoItem = {
   jockey_id: string;
   jockey_name: string;
   win_odds: number | null;
+  physical?: ApiPhysical | null;
   synchro: ApiSynchro & { components: ApiSynchroComponents };
   pattern_numerology?: ApiPatternNumerology;
   oshi?: ApiOshi;
@@ -96,7 +124,7 @@ export async function fetchDayRecommendations(
   if (targetDate) q.set("target_date", targetDate);
   try {
     const r = await fetch(`${API_BASE}/v1/day-recommendations?${q}`,
-      { cache: "no-store" });
+      { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;
     const body = await r.json();
     if (!body || !Array.isArray(body.items)) return null;
@@ -243,7 +271,7 @@ export type ApiPastRaceDetail = {
 
 export async function fetchPastRaces(): Promise<ApiPastRaces | null> {
   try {
-    const r = await fetch(`${API_BASE}/v1/past-races`, { cache: "no-store" });
+    const r = await fetch(`${API_BASE}/v1/past-races`, { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;
     const body = await r.json();
     if (!body || !Array.isArray(body.days)) return null;
@@ -258,7 +286,7 @@ export async function fetchPastRaceDetail(
 ): Promise<ApiPastRaceDetail | null> {
   try {
     const r = await fetch(`${API_BASE}/v1/past-races/${raceId}`,
-      { cache: "no-store" });
+      { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;
     return (await r.json()) as ApiPastRaceDetail;
   } catch {
@@ -304,7 +332,7 @@ export async function fetchHumanFortune(
     entity_type: "human", birth_date: birth, target_date: targetDate,
   });
   try {
-    const r = await fetch(`${API_BASE}/v1/day-fortune?${q}`, { cache: "no-store" });
+    const r = await fetch(`${API_BASE}/v1/day-fortune?${q}`, { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;
     return (await r.json()) as ApiHumanFortune;
   } catch {
@@ -335,7 +363,7 @@ export async function fetchMonthCalendar(
     birth_date: birth, year: String(year), month: String(month),
   });
   try {
-    const r = await fetch(`${API_BASE}/v1/month-calendar?${q}`, { cache: "no-store" });
+    const r = await fetch(`${API_BASE}/v1/month-calendar?${q}`, { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;
     return (await r.json()) as ApiMonthCalendar;
   } catch {

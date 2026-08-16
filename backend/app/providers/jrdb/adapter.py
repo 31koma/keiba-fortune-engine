@@ -130,6 +130,37 @@ class JRDBDataProvider(DataProviderSet):
                     "pop_band": None, "joc_split": None, "cyo_split": None,
                     "v4_cell": None, "p_v4": None,
                 }
+                # ── 2026-08-16 追加: KYIの未使用項目を素通しする。
+                #    すべて発走前に判明する値。**「合」の式には一切入れていない**
+                #    (印・看板・並び順は従来どおり。まずは見えるようにするだけ)。
+                #    採用したくなったら事前登録を切ってから。
+                physical.update({
+                    # 展開: どこを走るつもりの馬か
+                    "kyakushitsu": parser.to_int(e.get("kyakushitsu", "")),
+                    "ten_idx": parser.to_index_float(e.get("ten_idx", "")),
+                    "pace_idx": parser.to_index_float(e.get("pace_idx", "")),
+                    "agari_idx": parser.to_index_float(e.get("agari_idx", "")),
+                    "position_idx": parser.to_index_float(e.get("position_idx", "")),
+                    "pace_forecast": e.get("pace_forecast", "").strip() or None,
+                    "michinaka_rank": parser.to_int(e.get("michinaka_rank", "")),
+                    "last3f_rank": parser.to_int(e.get("last3f_rank", "")),
+                    "goal_rank": parser.to_int(e.get("goal_rank", "")),
+                    # 適性: 「合」がまだ見ていない距離と馬場
+                    "kyori_tekisei": parser.to_int(e.get("kyori_tekisei", "")),
+                    "shiba_tekisei": parser.to_int(e.get("shiba_tekisei", "")),
+                    "dirt_tekisei": parser.to_int(e.get("dirt_tekisei", "")),
+                    "omo_tekisei": parser.to_int(e.get("omo_tekisei", "")),
+                    "rotation": parser.to_int(e.get("rotation", "")),
+                    # 仕上がり・厩舎・騎手
+                    "cyokyo_arrow": parser.to_int(e.get("cyokyo_arrow", "")),
+                    "kyusha_hyoka": parser.to_int(e.get("kyusha_hyoka", "")),
+                    "jockey_rentai": parser.to_index_float(e.get("jockey_rentai", "")),
+                    # 一発の目
+                    "gekiso_idx": parser.to_int(e.get("gekiso_idx", "")),
+                    "ninki_idx": parser.to_int(e.get("ninki_idx", "")),
+                    "blinker": (e.get("blinker", "").strip() or None),
+                    "waku": parser.to_int(e.get("waku", "")),
+                })
                 entries.append(RaceEntryDTO(
                     horse_id=e["pedigree_id"], jockey_id=e["jockey_code"],
                     post_number=post, win_odds=win, physical=physical))

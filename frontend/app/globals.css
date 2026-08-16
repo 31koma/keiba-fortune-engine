@@ -83,6 +83,11 @@ body::after {
 @media (prefers-reduced-motion: reduce) { body::after { animation: none; } }
 main, .dev-badge { position: relative; z-index: 1; }
 main { max-width: 480px; margin: 0 auto; padding: 0 20px calc(32px + env(safe-area-inset-bottom)); }
+/* 出馬表など「横に情報を並べたい画面」は広い画面で幅いっぱい使う。
+   スマホは従来どおり480px(2026-08-16 オーナー: 横が空いているのはもったいない)。 */
+@media (min-width: 760px)  { main.main-wide { max-width: 720px; } }
+@media (min-width: 1000px) { main.main-wide { max-width: 980px; } }
+@media (min-width: 1280px) { main.main-wide { max-width: 1220px; } }
 
 .dev-badge {
   position: sticky; top: 0; z-index: 10;
@@ -948,3 +953,35 @@ button.back { background: transparent; border: none; cursor: pointer;
   .rb-m { width: 28px; font-size: 11px; }
   .rb-odds { width: 44px; }
 }
+
+/* ------------------------------------------------------------
+   RaceBoard 追補(2026-08-16)
+   ・Rタブが横スクロールに隠れて「9レースしかない」ように見えた
+     → 折り返して**12個すべて常に見える**ようにする(隠すより折り返す)
+   ・広い画面では列を足す(脚質・想定ゴール順位・激走指数)
+   ------------------------------------------------------------ */
+.rb-tabs-race {
+  flex-wrap: wrap; overflow-x: visible; gap: 4px;
+}
+.rb-rtab { flex: 1 1 auto; min-width: 52px; }
+
+/* 追加列は狭い画面では隠す(スマホは 合+収理調騎 だけで十分) */
+.rb-ext { display: none; }
+@media (min-width: 760px) {
+  .rb-ext { display: table-cell; }
+  .rb-table { font-size: 14px; }
+  .rb-table td { padding: 10px 5px; }
+  .rb-hname { font-size: 15px; }
+  .rb-jockey { font-size: 12px; }
+  .rb-nm { min-width: 180px; }
+  .rb-fbadge { min-width: 46px; font-size: 16px; }
+  .rb-m { width: 40px; font-size: 13px; }
+  .rb-odds { width: 62px; font-size: 14px; }
+  .rb-pop { width: 40px; }
+  .rb-waku { width: 34px; }
+  .rb-waku-box { width: 24px; height: 24px; line-height: 24px; font-size: 12px; }
+  .rb-no { width: 38px; font-size: 14px; }
+}
+.rb-kyaku { font-family: inherit; letter-spacing: 0; }
+/* 想定ゴール1位はJRDB自身の本命。12開催日で勝26.6%・複54.3%(全馬7.7%/22.9%) */
+.rb-hit { color: var(--gold); font-weight: 700; }

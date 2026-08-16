@@ -83,6 +83,29 @@ export type ApiPhysical = {
   cyo_split?: "high" | "low" | null;
   v4_cell?: "high/high" | "high/low" | "low/high" | "low/low" | null;
   p_v4?: number | null;
+  // ── 2026-08-16 追加: KYIの未使用項目。すべて発走前に判明する値で、
+  //    **「合」の式には入っていない**(表示と分析のためだけ)。
+  kyakushitsu?: number | null;      // 脚質 1:逃 2:先 3:差 4:追
+  ten_idx?: number | null;
+  pace_idx?: number | null;
+  agari_idx?: number | null;
+  position_idx?: number | null;
+  pace_forecast?: string | null;    // H:ハイ M:平均 S:スロー
+  michinaka_rank?: number | null;
+  last3f_rank?: number | null;
+  goal_rank?: number | null;        // JRDBの想定ゴール順位
+  kyori_tekisei?: number | null;
+  shiba_tekisei?: number | null;
+  dirt_tekisei?: number | null;
+  omo_tekisei?: number | null;
+  rotation?: number | null;
+  cyokyo_arrow?: number | null;
+  kyusha_hyoka?: number | null;
+  jockey_rentai?: number | null;
+  gekiso_idx?: number | null;
+  ninki_idx?: number | null;
+  blinker?: string | null;
+  waku?: number | null;
 };
 
 export type ApiRecoItem = {

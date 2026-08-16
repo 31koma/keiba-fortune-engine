@@ -249,7 +249,7 @@ function RacesBody() {
   }, []);
 
   return (
-    <main>
+    <main className="main-wide">
       {api && api.items.length > 0
         ? <ApiRaces api={api} hasBirth={!!birth} userOff={userOff}
             initRace={initRace} initHorse={initHorse} />

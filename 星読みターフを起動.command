@@ -8,7 +8,7 @@ echo "=== 星読みターフを起動します ==="
 
 # --- バックエンド(ポート8000) ---
 if lsof -i :8000 -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "・バックエンド: すでに起動しています"
+  echo "・バックエンド: すでに起動しています(コードを更新したなら「星読みターフを再起動.command」を使ってください)"
 else
   echo "・バックエンド: 起動中..."
   (cd backend && nohup .venv/bin/python -m uvicorn app.main:app \
@@ -17,20 +17,21 @@ fi
 
 # --- フロントエンド(ポート3000・本番モード) ---
 if lsof -i :3000 -sTCP:LISTEN >/dev/null 2>&1; then
-  echo "・フロントエンド: すでに起動しています"
+  echo "・フロントエンド: すでに起動しています(コードを更新したなら「星読みターフを再起動.command」を使ってください)"
 else
   NEED_BUILD=0
   if [ ! -f frontend/.next/BUILD_ID ]; then
     NEED_BUILD=1
-  elif [ -n "$(find frontend/app frontend/lib -newer frontend/.next/BUILD_ID -print -quit 2>/dev/null)" ]; then
-    NEED_BUILD=1  # コードが更新されている
+  elif [ -n "$(find frontend/app frontend/lib frontend/middleware.ts frontend/next.config.mjs -newer frontend/.next/BUILD_ID -print -quit 2>/dev/null)" ]; then
+    NEED_BUILD=1  # コードが更新されている(middleware/next.configの変更も拾う)
   fi
   if [ "$NEED_BUILD" = "1" ]; then
     echo "・フロントエンド: ビルド中...(1〜2分。この画面に進捗が出ます)"
     (cd frontend && npm run build) || { echo "ビルド失敗。ログを確認してください"; read -p "Enterで閉じる"; exit 1; }
   fi
   echo "・フロントエンド: 起動中..."
-  (cd frontend && nohup npm run start >> ../backend/logs/frontend.log 2>&1 &)
+  # -H 127.0.0.1 = このMacの中からだけ繋がる。外へはTailscale経由でのみ公開する
+  (cd frontend && nohup npm run start -- -H 127.0.0.1 >> ../backend/logs/frontend.log 2>&1 &)
 fi
 
 # --- 起動待ち → ブラウザを開く ---

@@ -37,8 +37,15 @@ LAYOUTS: dict[str, dict] = {
             "post_number":    (9, 2),     # 馬番
             "pedigree_id":    (11, 8),    # 血統登録番号(UKCとリンク)
             "horse_name":     (19, 36),
+            "idm":            (55, 5),    # IDM(JRDB物理指数。ZZZ.Z)
+            "jockey_idx":     (60, 5),    # 騎手指数
+            "info_idx":       (65, 5),    # 情報指数
+            "total_idx":      (85, 5),    # 総合指数
+            "cyokyo_idx":     (145, 5),   # 調教指数(負値あり)
+            "kyusha_idx":     (150, 5),   # 厩舎指数(負値あり)
             "base_win_odds":  (96, 5),    # 基準オッズ ZZ9.9(JRDB算出の想定オッズ)
             "base_win_rank":  (101, 2),   # 基準人気順位
+            "base_place_odds": (103, 5),  # 基準複勝オッズ ZZ9.9
             "jockey_name":    (172, 12),
             "load_weight":    (184, 3),   # 0.1kg単位
             "jockey_code":    (336, 5),   # 騎手マスタ(KZA)とリンク

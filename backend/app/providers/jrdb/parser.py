@@ -25,12 +25,33 @@ def to_int(s: str) -> int | None:
 
 
 def to_float(s: str) -> float | None:
-    """ZZ9.9等。空白・0は未設定としてNone(オッズ0.0は存在しない)。"""
+    """オッズ用。空白・0は未設定としてNone(オッズ0.0は存在しない)。
+
+    負値・0を落とすため、**指数系フィールドには使わないこと**(to_index_float を使う)。
+    """
     try:
         v = float(s.strip())
     except ValueError:
         return None
     return v if v > 0 else None
+
+
+def to_index_float(s: str) -> float | None:
+    """指数系(IDM・騎手・情報・総合・調教・厩舎)用。0と負値を値として保持する。
+
+    JRDBの調教指数・厩舎指数・情報指数は負値をとり、騎手指数は0.0をとる。
+    これらを to_float() に通すと未設定扱いで消える(2026-08-15 run11で判明。
+    KYI260815では調教指数259/487・厩舎指数236/487・情報指数243/487が欠落し、
+    「合」の物理平均が一部の馬で理・騎の2項だけで計算されていた)。
+    未設定は空白で表現されるため、空白・非数値のみ None とする。
+    """
+    s = s.strip()
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
 
 
 def to_date(s: str) -> date | None:

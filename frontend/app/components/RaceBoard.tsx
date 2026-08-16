@@ -22,6 +22,45 @@ const SURFACE: Record<string, string> = { turf: "芝", dirt: "ダ", jump: "障" 
 // 突き合わせると、1→4の順で相対位置が 0.286 / 0.390 / 0.540 / 0.697 と単調に後ろへ下がる。
 const KYAKU: Record<number, string> = { 1: "逃", 2: "先", 3: "差", 4: "追" };
 
+// 発売締切時刻。**出典: JRA / 競馬ブック(2022-07-16よりネット投票は2分前→1分前へ変更)**
+//   ネット投票(即PAT・A-PAT)  : 発走の1分前
+//   競馬場・WINSの窓口        : 発走の2分前
+//   電話・JRAダイレクト        : 発走の5分前
+//   WIN5                     : 最初の対象レースの発走の10分前(JRAダイレクトは15分前)
+// 画面にはいちばん遅い「ネット投票」を出す。他の買い方は説明の中に書く。
+const DEADLINE_MIN = 1;
+
+function deadlineOf(startTime: string | null): string | null {
+  if (!startTime || !/^\d{1,2}:\d{2}$/.test(startTime)) return null;
+  const [h, m] = startTime.split(":").map(Number);
+  const t = h * 60 + m - DEADLINE_MIN;
+  if (t < 0) return null;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+}
+
+/** 締切までの残り。今日のレースのときだけ出す(過去日を見ているときは出さない) */
+function useCountdown(targetDate: string, startTime: string | null) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 20000);
+    return () => clearInterval(id);
+  }, []);
+  if (!startTime) return null;
+  const today = new Date(now);
+  const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`
+    + `-${String(today.getDate()).padStart(2, "0")}`;
+  if (ymd !== targetDate) return null;              // 今日でなければ出さない
+  const [h, m] = startTime.split(":").map(Number);
+  const dl = new Date(today);
+  dl.setHours(h, m - DEADLINE_MIN, 0, 0);
+  const diff = Math.floor((dl.getTime() - now) / 60000);
+  if (diff < 0) return "締切";
+  if (diff === 0) return "まもなく締切";
+  if (diff < 60) return `締切まで${diff}分`;
+  return `締切まで${Math.floor(diff / 60)}時間${diff % 60}分`;
+}
+
+
 
 // 列見出しの説明(カーソルを乗せる/タップすると出る)。
 // 2026-08-16 オーナー「合 収 理 調 騎 脚 想 激 これよくわからん。カーソル持っていったら説明で」。
@@ -127,6 +166,9 @@ export default function RaceBoard({ groups, targetDate, onPick, initRaceId }: {
   }, [course, courseRaces, groups, raceId]);
 
   const race = groups.find((g) => g.race_id === raceId) ?? courseRaces[0];
+  const headStart = race?.items?.[0]?.start_time ?? null;
+  const deadline = deadlineOf(headStart);
+  const left = useCountdown(targetDate, headStart);
   if (!race) return null;
 
   const rows = race.items.slice()
@@ -164,6 +206,21 @@ export default function RaceBoard({ groups, targetDate, onPick, initRaceId }: {
           {race.race_name && race.race_name !== "レース"
             ? race.race_name : `${race.racecourse}${race.race_number}R`}
         </span>
+        {deadline && (
+          <button type="button" className="rb-h rb-deadline">
+            締切 {deadline}
+            {left && <em className={left === "締切" ? "rb-left over" : "rb-left"}>{left}</em>}
+            <span className="rb-tip" role="tooltip">
+              <b>発売締切</b>
+              画面に出しているのは<b style={{ display: "inline" }}>ネット投票(即PAT・A-PAT)</b>
+              の締切で、発走の1分前です(2022年7月16日に2分前から変更)。
+              買い方によって違います — 競馬場・WINSの窓口は発走の2分前、
+              電話・JRAダイレクトは5分前。
+              WIN5は最初の対象レースの発走の10分前(JRAダイレクトは15分前)。
+              出典: JRA。変更されることがあるので、締め切り間際はJRA公式で確かめてください。
+            </span>
+          </button>
+        )}
         <span className="rb-rmeta">
           {head?.start_time ? `${head.start_time}発走` : ""}
           {head?.distance ? ` / ${SURFACE[head.surface] ?? ""}${head.distance}m` : ""}

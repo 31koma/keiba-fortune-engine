@@ -93,7 +93,7 @@ function Win5Section({ groups, onPick }: {
       })}
       <p className="ipat-hint">
         {confident
-          ? "1レース目の発売締切は発走5分前。対象レースはJRA公式でも確認できます"
+          ? "WIN5の締切は最初の対象レースの発走10分前(JRAダイレクトは15分前)。対象レースはJRA公式でも確認できます"
           : "⚠ 対象レースは発走時刻からの推定です。JRA公式のWIN5対象レース表で確認してください"}
       </p>
     </section>

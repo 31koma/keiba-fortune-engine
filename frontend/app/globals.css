@@ -1022,3 +1022,18 @@ button.back { background: transparent; border: none; cursor: pointer;
 .rb-table th:nth-child(-n+3) .rb-tip::before { left: 22px; }
 .rb-table th:nth-last-child(-n+3) .rb-tip { left: auto; right: 0; transform: none; }
 .rb-table th:nth-last-child(-n+3) .rb-tip::before { left: auto; right: 16px; }
+
+/* 発売締切(2026-08-16) --------------------------------------------
+   ネット投票=発走1分前 / 窓口=2分前 / 電話・JRAダイレクト=5分前 /
+   WIN5=最初のレースの10分前。出典はJRA。詳細はツールチップに書いた。 */
+.rb-deadline {
+  font-family: var(--rb-num); font-size: 13px; font-weight: 700;
+  color: var(--gold); border-bottom-color: var(--gold-soft);
+  cursor: help; white-space: nowrap;
+}
+.rb-left {
+  display: inline-block; margin-left: 7px; padding: 1px 7px;
+  font-style: normal; font-size: 11.5px; font-weight: 700;
+  color: var(--navy); background: var(--gold); border-radius: 10px;
+}
+.rb-left.over { color: var(--ink); background: rgba(245, 241, 232, 0.16); }
